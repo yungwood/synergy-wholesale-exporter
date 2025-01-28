@@ -45,7 +45,10 @@ func (r ListDomainsRequest) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 			{Name: xml.Name{Local: "xsi:type"}, Value: "ns2:Map"},
 		},
 	}
-	e.EncodeToken(paramStart)
+	if err := e.EncodeToken(paramStart); err != nil {
+		slog.Error("Error creating SOAP request", "error", err)
+		return err
+	}
 
 	// Marshal the key-value pairs as nested items
 	items := []struct {
@@ -63,10 +66,18 @@ func (r ListDomainsRequest) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 	}
 
 	// End the param element
-	e.EncodeToken(paramStart.End())
+	if err := e.EncodeToken(paramStart.End()); err != nil {
+		slog.Error("Error creating SOAP request", "error", err)
+		return err
+	}
 
 	// End the listDomains element
-	return e.EncodeToken(start.End())
+	if err := e.EncodeToken(start.End()); err != nil {
+		slog.Error("Error creating SOAP request", "error", err)
+		return err
+	}
+
+	return nil
 }
 
 type ListDomainsResponse struct {
