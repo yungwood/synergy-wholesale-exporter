@@ -36,7 +36,10 @@ type ListDomainsRequest struct {
 func (r ListDomainsRequest) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	// Start the parent element (listDomains)
 	start.Name.Local = "ns1:listDomains"
-	e.EncodeToken(start)
+	if err := e.EncodeToken(start); err != nil {
+		slog.Error("Error creating SOAP request", "error", err)
+		return err
+	}
 
 	// Start the param element with xsi:type attribute
 	paramStart := xml.StartElement{
