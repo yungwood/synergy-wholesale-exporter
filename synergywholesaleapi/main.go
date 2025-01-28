@@ -92,17 +92,17 @@ type DomainList struct {
 
 // This struct only unmarshalls the values that are useful for exporter purposes
 type DomainInfo struct {
-	Status         string   `xml:"status"`
-	ErrorMessage   string   `xml:"errorMessage"`
-	DomainName     string   `xml:"domainName"`
-	DomainStatus   string   `xml:"domain_status"`
-	DomainCreated  string   `xml:"domain_created,omitempty"`
-	DomainExpiry   string   `xml:"domain_expiry,omitempty"`
-	CreatedDate    string   `xml:"createdDate,omitempty"`
-	TransferStatus string   `xml:"transfer_status,omitempty"`
-	AutoRenew      int      `xml:"autoRenew,omitempty"`
-	NameServers    []string `xml:"nameServers>item"`
-	DNSSECKeys     []string `xml:"DSData>item>UUID"`
+	Status         string            `xml:"status"`
+	ErrorMessage   string            `xml:"errorMessage"`
+	DomainName     string            `xml:"domainName"`
+	DomainStatus   string            `xml:"domain_status"`
+	DomainCreated  string            `xml:"domain_created,omitempty"`
+	DomainExpiry   string            `xml:"domain_expiry,omitempty"`
+	CreatedDate    string            `xml:"createdDate,omitempty"`
+	TransferStatus string            `xml:"transfer_status,omitempty"`
+	AutoRenew      int               `xml:"autoRenew,omitempty"`
+	NameServers    []string          `xml:"nameServers>item"`
+	DNSSECKeys     []DomainDNSSECKey `xml:"DSData>item"`
 }
 
 func (domainInfo DomainInfo) GetDomainExpiryTimestamp() int64 {
@@ -131,6 +131,13 @@ func dateStringToTimestamp(dateString string) int64 {
 	}
 	utcTime := t.UTC()
 	return utcTime.Unix()
+}
+
+type DomainDNSSECKey struct {
+	KeyTag     string `xml:"keyTag"`
+	Algorithm  string `xml:"algorithm"`
+	DigestType string `xml:"digestType"`
+	Digest     string `xml:"digest"`
 }
 
 type SOAPResponseCommon struct {

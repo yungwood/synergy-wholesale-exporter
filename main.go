@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	api "github.com/yungwood/synergy-wholesale-exporter/synergywholesaleapi"
 )
@@ -22,13 +23,14 @@ var (
 )
 
 var (
-	resellerID      = flag.String("reseller-id", "", "Synergy Wholesale Reseller ID")
-	apiKey          = flag.String("apikey", "", "Synergy Wholesale API Key")
-	listenAddress   = flag.String("address", ":8080", "listening port for api")
-	printVersion    = flag.Bool("version", false, "print version and exit")
-	debugLogging    = flag.Bool("debug", false, "enable debug logging")
-	jsonLogging     = flag.Bool("json", false, "output logging in JSON format")
-	cacheTTLSeconds = flag.Int64("ttl", 3600, "cache TTL value in seconds")
+	resellerID           = flag.String("reseller-id", "", "Synergy Wholesale Reseller ID")
+	apiKey               = flag.String("apikey", "", "Synergy Wholesale API Key")
+	listenAddress        = flag.String("address", ":8080", "listening port for exporter")
+	printVersion         = flag.Bool("version", false, "print version and exit")
+	debugLogging         = flag.Bool("debug", false, "enable debug logging")
+	jsonLogging          = flag.Bool("json", false, "output logs in JSON format")
+	cacheTTLSeconds      = flag.Int64("cache-ttl", 3600, "cache TTL value in seconds for Synergy Wholesale API requests")
+	disableGolangMetrics = flag.Bool("no-golang-metrics", false, "disable the default golang prometheus collectors")
 )
 
 var (
@@ -42,10 +44,10 @@ var (
 )
 
 type Collector struct {
-	domainAutoRenew      *prometheus.Desc
-	domainExpiry         *prometheus.Desc
-	domainNameServer     *prometheus.Desc
-	domainDNSSECKeyCount *prometheus.Desc
+	domainAutoRenew     *prometheus.Desc
+	domainExpiry        *prometheus.Desc
+	domainNameServer    *prometheus.Desc
+	domainDNSSECKeyInfo *prometheus.Desc
 }
 
 func newCollector() *Collector {
@@ -55,9 +57,9 @@ func newCollector() *Collector {
 			[]string{"domain"},
 			nil,
 		),
-		domainDNSSECKeyCount: prometheus.NewDesc("domain_dnssec_key_count",
-			"Number of DNSSEC keys per domain",
-			[]string{"domain"},
+		domainDNSSECKeyInfo: prometheus.NewDesc("domain_dnssec_key_info",
+			"Domain DNSSEC key info",
+			[]string{"domain", "key_tag", "algorithm", "digest_type", "digest"},
 			nil,
 		),
 		domainExpiry: prometheus.NewDesc("domain_expiry_timestamp_seconds",
@@ -67,7 +69,7 @@ func newCollector() *Collector {
 		),
 		domainNameServer: prometheus.NewDesc("domain_name_server_info",
 			"Domain name server info",
-			[]string{"domain", "name_server_info"},
+			[]string{"domain", "name_server"},
 			nil,
 		),
 	}
@@ -95,12 +97,14 @@ func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
 			float64(domain.AutoRenew),
 			domain.DomainName,
 		)
-		ch <- prometheus.MustNewConstMetric(
-			collector.domainDNSSECKeyCount,
-			prometheus.GaugeValue,
-			float64(len(domain.DNSSECKeys)),
-			domain.DomainName,
-		)
+		for _, dnsSECKey := range domain.DNSSECKeys {
+			ch <- prometheus.MustNewConstMetric(
+				collector.domainDNSSECKeyInfo,
+				prometheus.GaugeValue,
+				float64(1),
+				domain.DomainName, dnsSECKey.KeyTag, dnsSECKey.Algorithm, dnsSECKey.DigestType, dnsSECKey.Digest,
+			)
+		}
 		ch <- prometheus.MustNewConstMetric(
 			collector.domainExpiry,
 			prometheus.GaugeValue,
@@ -200,6 +204,14 @@ func main() {
 
 	// setup exporter
 	prometheusRegistry := prometheus.NewRegistry()
+	// enable default collectors
+	if !*disableGolangMetrics {
+		prometheusRegistry.MustRegister(
+			collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+			collectors.NewGoCollector(),
+		)
+	}
+	// add build_info metric
 	BuildInfo.WithLabelValues(version, runtime.Version()).Set(1)
 	collector := newCollector()
 	prometheusRegistry.MustRegister(BuildInfo, collector)
