@@ -48,7 +48,7 @@ The exporter exposes the following metrics:
 
 | Metric                            | Type  | Description                                                                          | Labels                                                                                                                                                        |
 | --------------------------------- | ----- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build_info`                      | Gauge | Build information for the application.<br>Gauge always set to `1`.                   | - `version`: Application version<br>- `goversion`: Go runtime version                                                                                         |
+| `build_info`                      | Gauge | Build information for the application.<br>Gauge always set to `1`.                   | - `version`: Application version<br>- `revision`: Git revision<br>- `goversion`: Go runtime version                                                           |
 | `domain_auto_renew_enable`        | Gauge | Indicates whether auto-renew is enabled for a domain.                                | - `domain`: Domain name                                                                                                                                       |
 | `domain_dnssec_key_info`          | Gauge | Info metric for each DNSSEC key configured for a domain.<br>Gauge always set to `1`. | - `domain`: Domain name<br>- `key_tag`: DNSSEC Key Tag<br>- `algorithm`: DNSSEC Algorithm<br>- `digest_type`: DNSSEC Digest Type<br>- `digest`: DNSSEC Digest |
 | `domain_expiry_timestamp_seconds` | Gauge | UNIX timestamp of the domain expiration.                                             | - `domain`: Domain name<br>- `status`: Domain status (e.g. `ok`)                                                                                              |
@@ -88,7 +88,7 @@ For more details on the Synergy Wholesale API, visit the [Synergy Wholesale API 
 ```text
 # HELP build_info Application build information
 # TYPE build_info gauge
-build_info{version="0.0.1", goversion="go1.20.5"} 1
+build_info{version="0.0.1", revision="abc1234", goversion="go1.20.5"} 1
 
 # HELP domain_auto_renew_enable Domain auto-renewal status
 # TYPE domain_auto_renew_enable gauge

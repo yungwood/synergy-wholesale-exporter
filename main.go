@@ -13,7 +13,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var version = "development"
+var (
+	version  = "development"
+	revision = "unknown"
+)
 
 var (
 	resellerID          = flag.String("reseller-id", "", "Synergy Wholesale Reseller ID")
@@ -78,7 +81,7 @@ func main() {
 		)
 	}
 	// add build_info metric
-	BuildInfo.WithLabelValues(version, runtime.Version()).Set(1)
+	BuildInfo.WithLabelValues(version, revision, runtime.Version()).Set(1)
 	collector := newCollector()
 	prometheusRegistry.MustRegister(BuildInfo, collector)
 	http.Handle("/metrics", promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{}))

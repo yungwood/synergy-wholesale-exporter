@@ -11,7 +11,7 @@ var BuildInfo = prometheus.NewGaugeVec(
 		Name: "build_info",
 		Help: "Application build information",
 	},
-	[]string{"version", "goversion"},
+	[]string{"version", "revision", "goversion"},
 )
 
 type Collector struct {

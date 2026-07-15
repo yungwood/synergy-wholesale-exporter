@@ -81,3 +81,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VERSION=${{ env.VERSION }}
+            REVISION=${{ github.sha }}
