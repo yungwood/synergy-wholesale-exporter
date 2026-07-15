@@ -33,6 +33,15 @@ docker run -d \
 
 Metrics will be available at `:8080/metrics`.
 
+### Kubernetes
+
+You can deploy Synergy Wholesale Exporter using the provided [helm chart](https://github.com/yungwood/helm-charts/blob/main/charts/synergy-wholesale-exporter).
+
+```bash
+helm repo add yungwood https://yungwood.github.io/helm-charts/
+helm install --name your-release yungwood/synergy-wholesale-exporter
+```
+
 ## Metrics
 
 The exporter exposes the following metrics:
@@ -47,7 +56,7 @@ The exporter exposes the following metrics:
 
 ---
 
-The exporter also includes the default collectors from the [prometheus/client_golang](https://pkg.go.dev/github.com/prometheus/client_golang/prometheus/collectors) library (`go_*` and `process_*` metrics). These can be disabled using the `--no-golang-metrics` flag.
+The exporter can also include the default collectors from the [prometheus/client_golang](https://pkg.go.dev/github.com/prometheus/client_golang/prometheus/collectors) library (`go_*` and `process_*` metrics). These are disabled by default and can be enabled using the `--golang-metrics` flag.
 
 ## Cache Behavior
 
@@ -67,7 +76,7 @@ When prometheus scrapes the `/metrics` endpoint, the cached API response is used
   | `--version` | Print application version and exit |
   | `--debug` | Enable debug logging | `false` |
   | `--json` | Output logs in JSON format | `false` |
-  | `--no-golang-metrics` | Disable default golang metrics collectors | `false` |
+  | `--golang-metrics` | Enable default golang metrics collectors | `false` |
 
 - **Environment Variables**:
   | Variable | Description | Required |

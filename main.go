@@ -16,14 +16,14 @@ import (
 var version = "development"
 
 var (
-	resellerID           = flag.String("reseller-id", "", "Synergy Wholesale Reseller ID")
-	apiKey               = flag.String("apikey", "", "Synergy Wholesale API Key")
-	listenAddress        = flag.String("address", ":8080", "listening port for exporter")
-	printVersion         = flag.Bool("version", false, "print version and exit")
-	debugLogging         = flag.Bool("debug", false, "enable debug logging")
-	jsonLogging          = flag.Bool("json", false, "output logs in JSON format")
-	cacheTTLSeconds      = flag.Int64("cache-ttl", 3600, "cache TTL value in seconds for Synergy Wholesale API requests")
-	disableGolangMetrics = flag.Bool("no-golang-metrics", false, "disable the default golang prometheus collectors")
+	resellerID          = flag.String("reseller-id", "", "Synergy Wholesale Reseller ID")
+	apiKey              = flag.String("apikey", "", "Synergy Wholesale API Key")
+	listenAddress       = flag.String("address", ":8080", "listening port for exporter")
+	printVersion        = flag.Bool("version", false, "print version and exit")
+	debugLogging        = flag.Bool("debug", false, "enable debug logging")
+	jsonLogging         = flag.Bool("json", false, "output logs in JSON format")
+	cacheTTLSeconds     = flag.Int64("cache-ttl", 3600, "cache TTL value in seconds for Synergy Wholesale API requests")
+	enableGolangMetrics = flag.Bool("golang-metrics", false, "enable the default golang prometheus collectors")
 )
 
 func main() {
@@ -73,7 +73,7 @@ func main() {
 	// setup exporter
 	prometheusRegistry := prometheus.NewRegistry()
 	// enable default collectors
-	if !*disableGolangMetrics {
+	if *enableGolangMetrics {
 		prometheusRegistry.MustRegister(
 			collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 			collectors.NewGoCollector(),
@@ -94,7 +94,7 @@ func main() {
 		"Starting web server",
 		"listen_address", *listenAddress,
 		"cache_ttl_seconds", *cacheTTLSeconds,
-		"golang_metrics_enabled", !*disableGolangMetrics,
+		"golang_metrics_enabled", *enableGolangMetrics,
 		"debug_logging", *debugLogging,
 		"json_logging", *jsonLogging,
 	)
