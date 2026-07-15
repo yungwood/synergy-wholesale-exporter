@@ -133,19 +133,9 @@ func getDomains() api.ListDomainsResponse {
 		ResellerID: *resellerID,
 	}
 
-	data, err := api.SendSOAPRequest(request)
+	response, err := api.Send(request)
 	if err != nil {
 		fmt.Printf("Error sending SOAP request: %v\n", err)
-		return api.ListDomainsResponse{}
-	}
-
-	// Prepare the response struct
-	var response api.ListDomainsResponse
-
-	// Unmarshal the response
-	err2 := api.UnmarshalSOAPResponse(data, &response)
-	if err2 != nil {
-		fmt.Printf("Error: %v\n", err2)
 		return api.ListDomainsResponse{}
 	}
 

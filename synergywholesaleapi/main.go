@@ -149,17 +149,6 @@ type SOAPResponseCommon struct {
 	ErrorMessage string `xml:"errorMessage,omitempty"`
 }
 
-type SOAPResponse struct {
-	XMLName xml.Name `xml:"Envelope"`
-	Body    struct {
-		XMLName  xml.Name `xml:"Body"`
-		Response struct {
-			XMLName xml.Name `xml:"listDomainsResponse"`
-			ListDomainsResponse
-		}
-	}
-}
-
 type soapFault struct {
 	FaultCode   string `xml:"faultcode"`
 	FaultString string `xml:"faultstring"`
@@ -202,17 +191,17 @@ func createSOAPRequest(request interface{}) ([]byte, error) {
 	return xmlRequest, nil
 }
 
-func Send(request ListDomainsRequest) (interface{}, error) {
+func Send(request ListDomainsRequest) (ListDomainsResponse, error) {
 	response, err := SendSOAPRequest(request)
 	if err != nil {
-		return nil, err
+		return ListDomainsResponse{}, err
 	}
 
 	// Unmarshal the response
 	var responseObject ListDomainsResponse
 	err2 := UnmarshalSOAPResponse(response, &responseObject)
 	if err2 != nil {
-		return nil, err2
+		return ListDomainsResponse{}, err2
 	}
 	return responseObject, nil
 }
