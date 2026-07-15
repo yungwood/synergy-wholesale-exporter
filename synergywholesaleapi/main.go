@@ -14,6 +14,8 @@ import (
 // so I opted to write an implementation using core go libraries instead. I have only included
 // the minimum required detail to work with the API
 
+var apiEndpoint = "https://api.synergywholesale.com"
+
 // Define structs for creating requests
 type apiSOAPEnvelope struct {
 	XMLName  xml.Name    `xml:"Envelope"`
@@ -217,7 +219,7 @@ func sendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, "https://api.synergywholesale.com", bytes.NewBuffer(soapRequest))
+	req, err := http.NewRequest(http.MethodPost, apiEndpoint, bytes.NewBuffer(soapRequest))
 	if err != nil {
 		return nil, err
 	}

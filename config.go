@@ -18,28 +18,50 @@ const (
 )
 
 func applyEnvConfig() error {
-	setStringFromEnv("reseller-id", resellerID, envResellerID)
-	setStringFromEnv("apikey", apiKey, envAPIKey)
-	setStringFromEnv("address", listenAddress, envAddress)
+	return applyEnvConfigFromFlagSet(flag.CommandLine, envConfig{
+		resellerID:          resellerID,
+		apiKey:              apiKey,
+		listenAddress:       listenAddress,
+		cacheTTLSeconds:     cacheTTLSeconds,
+		debugLogging:        debugLogging,
+		jsonLogging:         jsonLogging,
+		enableGolangMetrics: enableGolangMetrics,
+	})
+}
 
-	if err := setInt64FromEnv("cache-ttl", cacheTTLSeconds, envCacheTTL); err != nil {
+type envConfig struct {
+	resellerID          *string
+	apiKey              *string
+	listenAddress       *string
+	cacheTTLSeconds     *int64
+	debugLogging        *bool
+	jsonLogging         *bool
+	enableGolangMetrics *bool
+}
+
+func applyEnvConfigFromFlagSet(flags *flag.FlagSet, config envConfig) error {
+	setStringFromEnv(flags, "reseller-id", config.resellerID, envResellerID)
+	setStringFromEnv(flags, "apikey", config.apiKey, envAPIKey)
+	setStringFromEnv(flags, "address", config.listenAddress, envAddress)
+
+	if err := setInt64FromEnv(flags, "cache-ttl", config.cacheTTLSeconds, envCacheTTL); err != nil {
 		return err
 	}
-	if err := setBoolFromEnv("debug", debugLogging, envDebug); err != nil {
+	if err := setBoolFromEnv(flags, "debug", config.debugLogging, envDebug); err != nil {
 		return err
 	}
-	if err := setBoolFromEnv("json", jsonLogging, envJSON); err != nil {
+	if err := setBoolFromEnv(flags, "json", config.jsonLogging, envJSON); err != nil {
 		return err
 	}
-	if err := setBoolFromEnv("golang-metrics", enableGolangMetrics, envGolangMetrics); err != nil {
+	if err := setBoolFromEnv(flags, "golang-metrics", config.enableGolangMetrics, envGolangMetrics); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func setStringFromEnv(flagName string, target *string, envName string) {
-	if wasFlagSet(flagName) {
+func setStringFromEnv(flags *flag.FlagSet, flagName string, target *string, envName string) {
+	if wasFlagSet(flags, flagName) {
 		return
 	}
 	if value := os.Getenv(envName); value != "" {
@@ -47,8 +69,8 @@ func setStringFromEnv(flagName string, target *string, envName string) {
 	}
 }
 
-func setInt64FromEnv(flagName string, target *int64, envName string) error {
-	if wasFlagSet(flagName) {
+func setInt64FromEnv(flags *flag.FlagSet, flagName string, target *int64, envName string) error {
+	if wasFlagSet(flags, flagName) {
 		return nil
 	}
 	value := os.Getenv(envName)
@@ -63,8 +85,8 @@ func setInt64FromEnv(flagName string, target *int64, envName string) error {
 	return nil
 }
 
-func setBoolFromEnv(flagName string, target *bool, envName string) error {
-	if wasFlagSet(flagName) {
+func setBoolFromEnv(flags *flag.FlagSet, flagName string, target *bool, envName string) error {
+	if wasFlagSet(flags, flagName) {
 		return nil
 	}
 	value := os.Getenv(envName)
@@ -79,9 +101,9 @@ func setBoolFromEnv(flagName string, target *bool, envName string) error {
 	return nil
 }
 
-func wasFlagSet(name string) bool {
+func wasFlagSet(flags *flag.FlagSet, name string) bool {
 	wasSet := false
-	flag.Visit(func(f *flag.Flag) {
+	flags.Visit(func(f *flag.Flag) {
 		if f.Name == name {
 			wasSet = true
 		}
