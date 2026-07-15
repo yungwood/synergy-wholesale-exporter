@@ -14,6 +14,14 @@ var BuildInfo = prometheus.NewGaugeVec(
 	[]string{"version", "revision", "goversion"},
 )
 
+var HTTPRequestsTotal = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "http_requests_total",
+		Help: "Total number of HTTP requests handled by the exporter.",
+	},
+	[]string{"code", "method", "handler"},
+)
+
 type Collector struct {
 	domainAutoRenew     *prometheus.Desc
 	domainExpiry        *prometheus.Desc

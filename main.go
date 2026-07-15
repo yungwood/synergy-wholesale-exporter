@@ -83,12 +83,21 @@ func main() {
 	// add build_info metric
 	BuildInfo.WithLabelValues(version, revision, runtime.Version()).Set(1)
 	collector := newCollector()
-	prometheusRegistry.MustRegister(BuildInfo, collector)
-	http.Handle("/metrics", promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{}))
+	prometheusRegistry.MustRegister(BuildInfo, HTTPRequestsTotal, collector)
+	http.Handle("/metrics", instrumentHTTPHandler(
+		"metrics",
+		promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{}),
+	))
 
 	// add a readiness and liveness check endpoint (return blank 200 OK response)
-	http.HandleFunc("/liveness", func(w http.ResponseWriter, r *http.Request) {})
-	http.HandleFunc("/readiness", func(w http.ResponseWriter, r *http.Request) {})
+	http.Handle("/liveness", instrumentHTTPHandler(
+		"liveness",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+	))
+	http.Handle("/readiness", instrumentHTTPHandler(
+		"readiness",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+	))
 
 	// start webserver
 	slog.Info(
@@ -102,4 +111,11 @@ func main() {
 	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
 		slog.Error("Error starting web server", "error", err)
 	}
+}
+
+func instrumentHTTPHandler(handlerName string, handler http.Handler) http.Handler {
+	return promhttp.InstrumentHandlerCounter(
+		HTTPRequestsTotal.MustCurryWith(prometheus.Labels{"handler": handlerName}),
+		handler,
+	)
 }
