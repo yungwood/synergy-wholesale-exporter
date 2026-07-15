@@ -35,6 +35,10 @@ func main() {
 		fmt.Println("version:", version)
 		os.Exit(0)
 	}
+	if err := applyEnvConfig(); err != nil {
+		fmt.Fprintf(os.Stderr, "configuration error: %v\n", err)
+		os.Exit(1)
+	}
 
 	// setup logging options
 	loggingLevel := slog.LevelInfo // default loglevel
@@ -53,17 +57,11 @@ func main() {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 	}
 	slog.SetDefault(logger)
-	if *resellerID == "" {
-		*resellerID = os.Getenv("SYNERGY_WHOLESALE_RESELLER_ID")
-	}
 
 	// check for required parameters
 	if *resellerID == "" {
 		slog.Error("Reseller ID not set!")
 		os.Exit(1)
-	}
-	if *apiKey == "" {
-		*apiKey = os.Getenv("SYNERGY_WHOLESALE_API_KEY")
 	}
 	if *apiKey == "" {
 		slog.Error("API Key not set!")

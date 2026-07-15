@@ -66,23 +66,18 @@ When prometheus scrapes the `/metrics` endpoint, the cached API response is used
 
 ## Configuration Parameters
 
-- **Command-line Flags**:
-  | Flag | Description | Default |
-  |-----------------------|-------------------------------------------------------|-----------------|
-  | `--reseller-id` | Synergy Wholesale Reseller ID | None (required) |
-  | `--apikey` | Synergy Wholesale API Key | None (required) |
-  | `--address` | Listening port for the metrics endpoint | `:8080` |
-  | `--cache-ttl` | Cache TTL for API responses (in seconds) | `3600` |
-  | `--version` | Print application version and exit |
-  | `--debug` | Enable debug logging | `false` |
-  | `--json` | Output logs in JSON format | `false` |
-  | `--golang-metrics` | Enable default golang metrics collectors | `false` |
+| Flag | Environment Variable | Description | Default | Required |
+|-----------------------|---------------------------------------------|-------------------------------------------------------|-----------------|----------|
+| `--reseller-id` | `SYNERGY_WHOLESALE_RESELLER_ID` | Synergy Wholesale Reseller ID | None | Yes |
+| `--apikey` | `SYNERGY_WHOLESALE_API_KEY` | Synergy Wholesale API Key | None | Yes |
+| `--address` | `SYNERGY_WHOLESALE_EXPORTER_ADDRESS` | Listening address for the metrics endpoint | `:8080` | No |
+| `--cache-ttl` | `SYNERGY_WHOLESALE_EXPORTER_CACHE_TTL` | Cache TTL for API responses (in seconds) | `3600` | No |
+| `--debug` | `SYNERGY_WHOLESALE_EXPORTER_DEBUG` | Enable debug logging (`true` or `false`) | `false` | No |
+| `--json` | `SYNERGY_WHOLESALE_EXPORTER_JSON` | Output logs in JSON format (`true` or `false`) | `false` | No |
+| `--golang-metrics` | `SYNERGY_WHOLESALE_EXPORTER_GOLANG_METRICS` | Enable default golang metrics collectors (`true` or `false`) | `false` | No |
+| `--version` | N/A | Print application version and exit | `false` | No |
 
-- **Environment Variables**:
-  | Variable | Description | Required |
-  |-----------------------------------|-----------------------------------|----------|
-  | `SYNERGY_WHOLESALE_RESELLER_ID` | Synergy Wholesale Reseller ID | if `--reseller-id` is not set |
-  | `SYNERGY_WHOLESALE_API_KEY` | Synergy Wholesale API Key | if `--apikey` is not set |
+Command-line flags take precedence over environment variables.
 
 ## Reference
 
