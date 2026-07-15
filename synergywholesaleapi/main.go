@@ -192,21 +192,21 @@ func createSOAPRequest(request interface{}) ([]byte, error) {
 }
 
 func Send(request ListDomainsRequest) (ListDomainsResponse, error) {
-	response, err := SendSOAPRequest(request)
+	response, err := sendSOAPRequest(request)
 	if err != nil {
 		return ListDomainsResponse{}, err
 	}
 
 	// Unmarshal the response
 	var responseObject ListDomainsResponse
-	err2 := UnmarshalSOAPResponse(response, &responseObject)
+	err2 := unmarshalSOAPResponse(response, &responseObject)
 	if err2 != nil {
 		return ListDomainsResponse{}, err2
 	}
 	return responseObject, nil
 }
 
-func SendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
+func sendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -243,7 +243,7 @@ func SendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
 	return body, nil
 }
 
-func UnmarshalSOAPResponse(data []byte, response interface{}) error {
+func unmarshalSOAPResponse(data []byte, response interface{}) error {
 	var faultEnvelope soapFaultEnvelope
 	if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&faultEnvelope); err != nil {
 		return fmt.Errorf("failed to unmarshal SOAP response: %w", err)
