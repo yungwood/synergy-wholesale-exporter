@@ -29,14 +29,14 @@ type apiSOAPBody struct {
 
 // ListDomainsRequest defines your simple struct
 type ListDomainsRequest struct {
-	ApiKey     string
+	APIKey     string
 	ResellerID string
 }
 
-func (r ListDomainsRequest) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+func (r ListDomainsRequest) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
 	// Start the parent element (listDomains)
 	start.Name.Local = "ns1:listDomains"
-	if err := e.EncodeToken(start); err != nil {
+	if err := encoder.EncodeToken(start); err != nil {
 		slog.Error("Error creating SOAP request", "error", err)
 		return err
 	}
@@ -48,7 +48,7 @@ func (r ListDomainsRequest) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 			{Name: xml.Name{Local: "xsi:type"}, Value: "ns2:Map"},
 		},
 	}
-	if err := e.EncodeToken(paramStart); err != nil {
+	if err := encoder.EncodeToken(paramStart); err != nil {
 		slog.Error("Error creating SOAP request", "error", err)
 		return err
 	}
@@ -58,24 +58,24 @@ func (r ListDomainsRequest) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 		Key   string `xml:"key"`
 		Value string `xml:"value"`
 	}{
-		{Key: "apiKey", Value: r.ApiKey},
+		{Key: "apiKey", Value: r.APIKey},
 		{Key: "resellerID", Value: r.ResellerID},
 	}
 
 	for _, item := range items {
-		if err := e.EncodeElement(item, xml.StartElement{Name: xml.Name{Local: "item"}}); err != nil {
+		if err := encoder.EncodeElement(item, xml.StartElement{Name: xml.Name{Local: "item"}}); err != nil {
 			return err
 		}
 	}
 
 	// End the param element
-	if err := e.EncodeToken(paramStart.End()); err != nil {
+	if err := encoder.EncodeToken(paramStart.End()); err != nil {
 		slog.Error("Error creating SOAP request", "error", err)
 		return err
 	}
 
 	// End the listDomains element
-	if err := e.EncodeToken(start.End()); err != nil {
+	if err := encoder.EncodeToken(start.End()); err != nil {
 		slog.Error("Error creating SOAP request", "error", err)
 		return err
 	}
@@ -182,7 +182,6 @@ func createSOAPRequest(request interface{}) ([]byte, error) {
 }
 
 func Send(request ListDomainsRequest) (interface{}, error) {
-
 	response, err := SendSOAPRequest(request)
 	if err != nil {
 		return nil, err
@@ -198,14 +197,16 @@ func Send(request ListDomainsRequest) (interface{}, error) {
 }
 
 func SendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 
 	soapRequest, err := createSOAPRequest(param)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", "https://api.synergywholesale.com", bytes.NewBuffer(soapRequest))
+	req, err := http.NewRequest(http.MethodPost, "https://api.synergywholesale.com", bytes.NewBuffer(soapRequest))
 	if err != nil {
 		return nil, err
 	}

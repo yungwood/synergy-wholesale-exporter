@@ -81,31 +81,29 @@ func (collector *Collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- collector.domainNameServer
 }
 
-func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
-
+func (collector *Collector) Collect(channel chan<- prometheus.Metric) {
 	listDomainsResp := getDomains()
 	for _, domain := range listDomainsResp.Return.DomainList {
-
 		// skip domains where api status != OK they are usually old/deleted
 		if domain.Status != "OK" {
 			continue
 		}
 
-		ch <- prometheus.MustNewConstMetric(
+		channel <- prometheus.MustNewConstMetric(
 			collector.domainAutoRenew,
 			prometheus.GaugeValue,
 			float64(domain.AutoRenew),
 			domain.DomainName,
 		)
 		for _, dnsSECKey := range domain.DNSSECKeys {
-			ch <- prometheus.MustNewConstMetric(
+			channel <- prometheus.MustNewConstMetric(
 				collector.domainDNSSECKeyInfo,
 				prometheus.GaugeValue,
 				float64(1),
 				domain.DomainName, dnsSECKey.KeyTag, dnsSECKey.Algorithm, dnsSECKey.DigestType, dnsSECKey.Digest,
 			)
 		}
-		ch <- prometheus.MustNewConstMetric(
+		channel <- prometheus.MustNewConstMetric(
 			collector.domainExpiry,
 			prometheus.GaugeValue,
 			float64(domain.GetDomainExpiryTimestamp()),
@@ -113,7 +111,7 @@ func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
 		)
 
 		for _, server := range domain.NameServers {
-			ch <- prometheus.MustNewConstMetric(
+			channel <- prometheus.MustNewConstMetric(
 				collector.domainNameServer,
 				prometheus.GaugeValue,
 				float64(1),
@@ -131,7 +129,7 @@ func getDomains() api.ListDomainsResponse {
 	slog.Info("Sending listDomains request to Synergy Wholesale API", "reseller_id", *resellerID)
 
 	request := api.ListDomainsRequest{
-		ApiKey:     *apiKey,
+		APIKey:     *apiKey,
 		ResellerID: *resellerID,
 	}
 
@@ -158,7 +156,6 @@ func getDomains() api.ListDomainsResponse {
 }
 
 func main() {
-
 	// parse command-line args
 	flag.Parse()
 
