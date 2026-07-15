@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -20,6 +21,7 @@ var version = "development"
 var (
 	listDomainsResponse api.ListDomainsResponse
 	cacheExpires        int64
+	cacheMu             sync.Mutex
 )
 
 var (
@@ -122,6 +124,9 @@ func (collector *Collector) Collect(channel chan<- prometheus.Metric) {
 }
 
 func getDomains() api.ListDomainsResponse {
+	cacheMu.Lock()
+	defer cacheMu.Unlock()
+
 	if cacheExpires > time.Now().Unix() {
 		return listDomainsResponse
 	}
