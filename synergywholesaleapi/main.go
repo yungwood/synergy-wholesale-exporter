@@ -16,11 +16,12 @@ import (
 
 // Define structs for creating requests
 type apiSOAPEnvelope struct {
-	XMLName xml.Name    `xml:"Envelope"`
-	Xmlns   string      `xml:"xmlns:SOAP-ENV,attr"`
-	Xmlns1  string      `xml:"xmlns:ns1,attr"`
-	Xmlns2  string      `xml:"xmlns:ns2,attr"`
-	Body    apiSOAPBody `xml:"Body"`
+	XMLName  xml.Name    `xml:"Envelope"`
+	Xmlns    string      `xml:"xmlns:SOAP-ENV,attr"`
+	Xmlns1   string      `xml:"xmlns:ns1,attr"`
+	Xmlns2   string      `xml:"xmlns:ns2,attr"`
+	XmlnsXSI string      `xml:"xmlns:xsi,attr"`
+	Body     apiSOAPBody `xml:"Body"`
 }
 
 type apiSOAPBody struct {
@@ -159,11 +160,31 @@ type SOAPResponse struct {
 	}
 }
 
+type soapFault struct {
+	FaultCode   string `xml:"faultcode"`
+	FaultString string `xml:"faultstring"`
+}
+
+func (fault soapFault) Error() string {
+	if fault.FaultCode == "" {
+		return fmt.Sprintf("soap fault: %s", fault.FaultString)
+	}
+	return fmt.Sprintf("soap fault: %s: %s", fault.FaultCode, fault.FaultString)
+}
+
+type soapFaultEnvelope struct {
+	XMLName xml.Name `xml:"Envelope"`
+	Body    struct {
+		Fault *soapFault `xml:"Fault"`
+	} `xml:"Body"`
+}
+
 func createSOAPRequest(request interface{}) ([]byte, error) {
 	envelope := apiSOAPEnvelope{
-		Xmlns:  "http://schemas.xmlsoap.org/soap/envelope/",
-		Xmlns2: "http://xml.apache.org/xml-soap",
-		Xmlns1: "http://api.synergywholesale.com",
+		Xmlns:    "http://schemas.xmlsoap.org/soap/envelope/",
+		Xmlns2:   "http://xml.apache.org/xml-soap",
+		Xmlns1:   "http://api.synergywholesale.com",
+		XmlnsXSI: "http://www.w3.org/2001/XMLSchema-instance",
 		Body: apiSOAPBody{
 			Content: request,
 		},
@@ -226,11 +247,22 @@ func SendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return nil, fmt.Errorf("synergy wholesale api returned status %d: %s", resp.StatusCode, truncateBody(body, 1024))
+	}
 
 	return body, nil
 }
 
 func UnmarshalSOAPResponse(data []byte, response interface{}) error {
+	var faultEnvelope soapFaultEnvelope
+	if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&faultEnvelope); err != nil {
+		return fmt.Errorf("failed to unmarshal SOAP response: %w", err)
+	}
+	if faultEnvelope.Body.Fault != nil {
+		return *faultEnvelope.Body.Fault
+	}
+
 	envelope := apiSOAPEnvelope{
 		Body: apiSOAPBody{
 			Content: response,
@@ -243,4 +275,11 @@ func UnmarshalSOAPResponse(data []byte, response interface{}) error {
 		return fmt.Errorf("failed to unmarshal SOAP response: %w", err)
 	}
 	return nil
+}
+
+func truncateBody(body []byte, limit int) string {
+	if len(body) <= limit {
+		return string(body)
+	}
+	return string(body[:limit]) + "...[truncated]"
 }
