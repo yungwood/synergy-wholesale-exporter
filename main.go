@@ -88,6 +88,12 @@ func (collector *Collector) Collect(channel chan<- prometheus.Metric) {
 	for _, domain := range listDomainsResp.Return.DomainList {
 		// skip domains where api status != OK they are usually old/deleted
 		if domain.Status != "OK" {
+			slog.Debug(
+				"Skipping domain with non-OK API status",
+				"domain", domain.DomainName,
+				"status", domain.Status,
+				"error_message", domain.ErrorMessage,
+			)
 			continue
 		}
 
@@ -128,6 +134,7 @@ func getDomains() api.ListDomainsResponse {
 	defer cacheMu.Unlock()
 
 	if cacheExpires > time.Now().Unix() {
+		slog.Debug("Using cached Synergy Wholesale domain response", "cache_expires", cacheExpires)
 		return listDomainsResponse
 	}
 
@@ -140,12 +147,17 @@ func getDomains() api.ListDomainsResponse {
 
 	response, err := api.Send(request)
 	if err != nil {
-		fmt.Printf("Error sending SOAP request: %v\n", err)
+		slog.Error("Error sending SOAP request", "error", err)
 		return api.ListDomainsResponse{}
 	}
 
 	listDomainsResponse = response
 	cacheExpires = time.Now().Unix() + *cacheTTLSeconds
+	slog.Info(
+		"Updated Synergy Wholesale domain cache",
+		"domain_count", len(response.Return.DomainList),
+		"cache_expires", cacheExpires,
+	)
 
 	return response
 }
@@ -214,7 +226,14 @@ func main() {
 	http.HandleFunc("/readiness", func(w http.ResponseWriter, r *http.Request) {})
 
 	// start webserver
-	slog.Info("Starting web server", "listen_address", *listenAddress)
+	slog.Info(
+		"Starting web server",
+		"listen_address", *listenAddress,
+		"cache_ttl_seconds", *cacheTTLSeconds,
+		"golang_metrics_enabled", !*disableGolangMetrics,
+		"debug_logging", *debugLogging,
+		"json_logging", *jsonLogging,
+	)
 	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
 		slog.Error("Error starting web server", "error", err)
 	}

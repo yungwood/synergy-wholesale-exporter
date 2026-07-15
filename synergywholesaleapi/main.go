@@ -131,6 +131,7 @@ func dateStringToTimestamp(dateString string) int64 {
 	layout := "2006-01-02 15:04:05"
 	t, err := time.ParseInLocation(layout, dateString, location)
 	if err != nil {
+		slog.Debug("Error parsing date string", "error", err, "date_string", dateString, "layout", layout)
 		return 0
 	}
 	utcTime := t.UTC()
@@ -237,6 +238,7 @@ func sendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		slog.Debug("Synergy Wholesale API returned non-2xx status", "response_code", resp.StatusCode)
 		return nil, fmt.Errorf("synergy wholesale api returned status %d: %s", resp.StatusCode, truncateBody(body, 1024))
 	}
 
