@@ -15,6 +15,7 @@ func TestApplyEnvConfigFromFlagSetUsesEnvironmentForUnsetFlags(t *testing.T) {
 	t.Setenv(envDebug, "true")
 	t.Setenv(envJSON, "true")
 	t.Setenv(envGolangMetrics, "true")
+	t.Setenv(envDNSSECMetrics, "true")
 
 	if err := applyEnvConfigFromFlagSet(flags, config); err != nil {
 		t.Fatalf("apply env config: %v", err)
@@ -41,6 +42,9 @@ func TestApplyEnvConfigFromFlagSetUsesEnvironmentForUnsetFlags(t *testing.T) {
 	if !*config.enableGolangMetrics {
 		t.Error("golang metrics = false, want true")
 	}
+	if !*config.enableDNSSECMetrics {
+		t.Error("DNSSEC metrics = false, want true")
+	}
 }
 
 func TestApplyEnvConfigFromFlagSetKeepsExplicitFlags(t *testing.T) {
@@ -52,6 +56,7 @@ func TestApplyEnvConfigFromFlagSetKeepsExplicitFlags(t *testing.T) {
 	t.Setenv(envDebug, "true")
 	t.Setenv(envJSON, "true")
 	t.Setenv(envGolangMetrics, "true")
+	t.Setenv(envDNSSECMetrics, "true")
 
 	mustSetFlag(t, flags, "reseller-id", "flag-reseller")
 	mustSetFlag(t, flags, "apikey", "flag-api-key")
@@ -60,6 +65,7 @@ func TestApplyEnvConfigFromFlagSetKeepsExplicitFlags(t *testing.T) {
 	mustSetFlag(t, flags, "debug", "false")
 	mustSetFlag(t, flags, "json", "false")
 	mustSetFlag(t, flags, "golang-metrics", "false")
+	mustSetFlag(t, flags, "dnssec-metrics", "false")
 
 	if err := applyEnvConfigFromFlagSet(flags, config); err != nil {
 		t.Fatalf("apply env config: %v", err)
@@ -85,6 +91,9 @@ func TestApplyEnvConfigFromFlagSetKeepsExplicitFlags(t *testing.T) {
 	}
 	if *config.enableGolangMetrics {
 		t.Error("golang metrics = true, want false")
+	}
+	if *config.enableDNSSECMetrics {
+		t.Error("DNSSEC metrics = true, want false")
 	}
 }
 
@@ -126,6 +135,7 @@ func newTestEnvConfig() (*flag.FlagSet, envConfig) {
 	var debugLogging bool
 	var jsonLogging bool
 	var enableGolangMetrics bool
+	var enableDNSSECMetrics bool
 
 	flags.StringVar(&resellerID, "reseller-id", resellerID, "")
 	flags.StringVar(&apiKey, "apikey", apiKey, "")
@@ -134,6 +144,7 @@ func newTestEnvConfig() (*flag.FlagSet, envConfig) {
 	flags.BoolVar(&debugLogging, "debug", debugLogging, "")
 	flags.BoolVar(&jsonLogging, "json", jsonLogging, "")
 	flags.BoolVar(&enableGolangMetrics, "golang-metrics", enableGolangMetrics, "")
+	flags.BoolVar(&enableDNSSECMetrics, "dnssec-metrics", enableDNSSECMetrics, "")
 
 	return flags, envConfig{
 		resellerID:          &resellerID,
@@ -143,6 +154,7 @@ func newTestEnvConfig() (*flag.FlagSet, envConfig) {
 		debugLogging:        &debugLogging,
 		jsonLogging:         &jsonLogging,
 		enableGolangMetrics: &enableGolangMetrics,
+		enableDNSSECMetrics: &enableDNSSECMetrics,
 	}
 }
 

@@ -28,6 +28,7 @@ var (
 	jsonLogging         = flag.Bool("json", false, "output logs in JSON format")
 	cacheTTLSeconds     = flag.Int64("cache-ttl", 3600, "cache TTL value in seconds for Synergy Wholesale API requests")
 	enableGolangMetrics = flag.Bool("golang-metrics", false, "enable the default golang prometheus collectors")
+	enableDNSSECMetrics = flag.Bool("dnssec-metrics", false, "enable DNSSEC key info metrics")
 )
 
 func main() {
@@ -106,6 +107,7 @@ func main() {
 		"listen_address", *listenAddress,
 		"cache_ttl_seconds", *cacheTTLSeconds,
 		"golang_metrics_enabled", *enableGolangMetrics,
+		"dnssec_metrics_enabled", *enableDNSSECMetrics,
 		"debug_logging", *debugLogging,
 		"json_logging", *jsonLogging,
 	)

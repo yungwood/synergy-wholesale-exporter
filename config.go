@@ -15,6 +15,7 @@ const (
 	envDebug         = "SYNERGY_WHOLESALE_EXPORTER_DEBUG"
 	envJSON          = "SYNERGY_WHOLESALE_EXPORTER_JSON"
 	envGolangMetrics = "SYNERGY_WHOLESALE_EXPORTER_GOLANG_METRICS"
+	envDNSSECMetrics = "SYNERGY_WHOLESALE_EXPORTER_DNSSEC_METRICS"
 )
 
 func applyEnvConfig() error {
@@ -26,6 +27,7 @@ func applyEnvConfig() error {
 		debugLogging:        debugLogging,
 		jsonLogging:         jsonLogging,
 		enableGolangMetrics: enableGolangMetrics,
+		enableDNSSECMetrics: enableDNSSECMetrics,
 	})
 }
 
@@ -37,6 +39,7 @@ type envConfig struct {
 	debugLogging        *bool
 	jsonLogging         *bool
 	enableGolangMetrics *bool
+	enableDNSSECMetrics *bool
 }
 
 func applyEnvConfigFromFlagSet(flags *flag.FlagSet, config envConfig) error {
@@ -54,6 +57,9 @@ func applyEnvConfigFromFlagSet(flags *flag.FlagSet, config envConfig) error {
 		return err
 	}
 	if err := setBoolFromEnv(flags, "golang-metrics", config.enableGolangMetrics, envGolangMetrics); err != nil {
+		return err
+	}
+	if err := setBoolFromEnv(flags, "dnssec-metrics", config.enableDNSSECMetrics, envDNSSECMetrics); err != nil {
 		return err
 	}
 

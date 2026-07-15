@@ -64,7 +64,9 @@ func metricName(name string) string {
 
 func (collector *Collector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- collector.domainAutoRenew
-	ch <- collector.domainDNSSECKeyInfo
+	if *enableDNSSECMetrics {
+		ch <- collector.domainDNSSECKeyInfo
+	}
 	ch <- collector.domainExpiry
 	ch <- collector.domainNameServer
 }
@@ -89,13 +91,15 @@ func (collector *Collector) Collect(channel chan<- prometheus.Metric) {
 			float64(domain.AutoRenew),
 			domain.DomainName,
 		)
-		for _, dnsSECKey := range domain.DNSSECKeys {
-			channel <- prometheus.MustNewConstMetric(
-				collector.domainDNSSECKeyInfo,
-				prometheus.GaugeValue,
-				float64(1),
-				domain.DomainName, dnsSECKey.KeyTag, dnsSECKey.Algorithm, dnsSECKey.DigestType, dnsSECKey.Digest,
-			)
+		if *enableDNSSECMetrics {
+			for _, dnsSECKey := range domain.DNSSECKeys {
+				channel <- prometheus.MustNewConstMetric(
+					collector.domainDNSSECKeyInfo,
+					prometheus.GaugeValue,
+					float64(1),
+					domain.DomainName, dnsSECKey.KeyTag, dnsSECKey.Algorithm, dnsSECKey.DigestType, dnsSECKey.Digest,
+				)
+			}
 		}
 		channel <- prometheus.MustNewConstMetric(
 			collector.domainExpiry,
