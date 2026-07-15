@@ -6,18 +6,22 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const metricNamespace = "synergy_wholesale"
+
 var BuildInfo = prometheus.NewGaugeVec(
 	prometheus.GaugeOpts{
-		Name: "build_info",
-		Help: "Application build information",
+		Namespace: metricNamespace,
+		Name:      "build_info",
+		Help:      "Application build information",
 	},
 	[]string{"version", "revision", "goversion"},
 )
 
 var HTTPRequestsTotal = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
-		Name: "http_requests_total",
-		Help: "Total number of HTTP requests handled by the exporter.",
+		Namespace: metricNamespace,
+		Name:      "http_requests_total",
+		Help:      "Total number of HTTP requests handled by the exporter.",
 	},
 	[]string{"code", "method", "handler"},
 )
@@ -31,27 +35,31 @@ type Collector struct {
 
 func newCollector() *Collector {
 	return &Collector{
-		domainAutoRenew: prometheus.NewDesc("domain_auto_renew_enable",
+		domainAutoRenew: prometheus.NewDesc(metricName("domain_auto_renew_enabled"),
 			"Domain auto-renewal status",
 			[]string{"domain"},
 			nil,
 		),
-		domainDNSSECKeyInfo: prometheus.NewDesc("domain_dnssec_key_info",
+		domainDNSSECKeyInfo: prometheus.NewDesc(metricName("domain_dnssec_key_info"),
 			"Domain DNSSEC key info",
 			[]string{"domain", "key_tag", "algorithm", "digest_type", "digest"},
 			nil,
 		),
-		domainExpiry: prometheus.NewDesc("domain_expiry_timestamp_seconds",
+		domainExpiry: prometheus.NewDesc(metricName("domain_expiry_timestamp_seconds"),
 			"Domain expiry timestamp in seconds",
 			[]string{"domain", "status"},
 			nil,
 		),
-		domainNameServer: prometheus.NewDesc("domain_name_server_info",
+		domainNameServer: prometheus.NewDesc(metricName("domain_name_server_info"),
 			"Domain name server info",
 			[]string{"domain", "name_server"},
 			nil,
 		),
 	}
+}
+
+func metricName(name string) string {
+	return prometheus.BuildFQName(metricNamespace, "", name)
 }
 
 func (collector *Collector) Describe(ch chan<- *prometheus.Desc) {

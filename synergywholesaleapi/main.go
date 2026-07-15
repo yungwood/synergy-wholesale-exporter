@@ -228,6 +228,7 @@ func sendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
+		SynergyWholesaleAPIRequestsTotal.WithLabelValues("0", "error").Inc()
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -237,13 +238,16 @@ func sendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		SynergyWholesaleAPIRequestsTotal.WithLabelValues(fmt.Sprintf("%d", resp.StatusCode), "error").Inc()
 		return nil, err
 	}
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		SynergyWholesaleAPIRequestsTotal.WithLabelValues(fmt.Sprintf("%d", resp.StatusCode), "error").Inc()
 		slog.Debug("Synergy Wholesale API returned non-2xx status", "response_code", resp.StatusCode)
 		return nil, fmt.Errorf("synergy wholesale api returned status %d: %s", resp.StatusCode, truncateBody(body, 1024))
 	}
 
+	SynergyWholesaleAPIRequestsTotal.WithLabelValues(fmt.Sprintf("%d", resp.StatusCode), "success").Inc()
 	return body, nil
 }
 

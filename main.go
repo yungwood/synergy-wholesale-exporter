@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	api "github.com/yungwood/synergy-wholesale-exporter/synergywholesaleapi"
 )
 
 var (
@@ -80,10 +81,10 @@ func main() {
 			collectors.NewGoCollector(),
 		)
 	}
-	// add build_info metric
+	// add build information metric
 	BuildInfo.WithLabelValues(version, revision, runtime.Version()).Set(1)
 	collector := newCollector()
-	prometheusRegistry.MustRegister(BuildInfo, HTTPRequestsTotal, collector)
+	prometheusRegistry.MustRegister(BuildInfo, HTTPRequestsTotal, api.SynergyWholesaleAPIRequestsTotal, collector)
 	http.Handle("/metrics", instrumentHTTPHandler(
 		"metrics",
 		promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{}),

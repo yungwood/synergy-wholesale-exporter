@@ -48,11 +48,13 @@ The exporter exposes the following metrics:
 
 | Metric                            | Type  | Description                                                                          | Labels                                                                                                                                                        |
 | --------------------------------- | ----- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build_info`                      | Gauge | Build information for the application.<br>Gauge always set to `1`.                   | - `version`: Application version<br>- `revision`: Git revision<br>- `goversion`: Go runtime version                                                           |
-| `domain_auto_renew_enable`        | Gauge | Indicates whether auto-renew is enabled for a domain.                                | - `domain`: Domain name                                                                                                                                       |
-| `domain_dnssec_key_info`          | Gauge | Info metric for each DNSSEC key configured for a domain.<br>Gauge always set to `1`. | - `domain`: Domain name<br>- `key_tag`: DNSSEC Key Tag<br>- `algorithm`: DNSSEC Algorithm<br>- `digest_type`: DNSSEC Digest Type<br>- `digest`: DNSSEC Digest |
-| `domain_expiry_timestamp_seconds` | Gauge | UNIX timestamp of the domain expiration.                                             | - `domain`: Domain name<br>- `status`: Domain status (e.g. `ok`)                                                                                              |
-| `domain_name_server_info`         | Gauge | Information about the name servers for a domain.<br>Gauge always set to `1`.         | - `domain`: Domain name<br>- `name_server_info`: Name server (e.g. `ns1.example.com`)                                                                         |
+| `synergy_wholesale_build_info` | Gauge | Build information for the application.<br>Gauge always set to `1`. | - `version`: Application version<br>- `revision`: Git revision<br>- `goversion`: Go runtime version |
+| `synergy_wholesale_domain_auto_renew_enabled` | Gauge | Indicates whether auto-renew is enabled for a domain. | - `domain`: Domain name |
+| `synergy_wholesale_domain_dnssec_key_info` | Gauge | Info metric for each DNSSEC key configured for a domain.<br>Gauge always set to `1`. | - `domain`: Domain name<br>- `key_tag`: DNSSEC Key Tag<br>- `algorithm`: DNSSEC Algorithm<br>- `digest_type`: DNSSEC Digest Type<br>- `digest`: DNSSEC Digest |
+| `synergy_wholesale_domain_expiry_timestamp_seconds` | Gauge | UNIX timestamp of the domain expiration. | - `domain`: Domain name<br>- `status`: Domain status (e.g. `ok`) |
+| `synergy_wholesale_domain_name_server_info` | Gauge | Information about the name servers for a domain.<br>Gauge always set to `1`. | - `domain`: Domain name<br>- `name_server`: Name server (e.g. `ns1.example.com`) |
+| `synergy_wholesale_http_requests_total` | Counter | Total number of HTTP requests handled by the exporter. | - `code`: HTTP status code<br>- `method`: HTTP method<br>- `handler`: Handler name (`metrics`, `liveness`, `readiness`) |
+| `synergy_wholesale_api_requests_total` | Counter | Total number of HTTP requests sent to the Synergy Wholesale API. | - `code`: HTTP status code (`0` for transport errors)<br>- `result`: Request result (`success` or `error`) |
 
 ---
 
@@ -86,24 +88,32 @@ For more details on the Synergy Wholesale API, visit the [Synergy Wholesale API 
 ## Example Metrics Output
 
 ```text
-# HELP build_info Application build information
-# TYPE build_info gauge
-build_info{version="0.0.1", revision="abc1234", goversion="go1.20.5"} 1
+# HELP synergy_wholesale_build_info Application build information
+# TYPE synergy_wholesale_build_info gauge
+synergy_wholesale_build_info{version="0.0.1", revision="abc1234", goversion="go1.20.5"} 1
 
-# HELP domain_auto_renew_enable Domain auto-renewal status
-# TYPE domain_auto_renew_enable gauge
-domain_auto_renew_enable{domain="example.com"} 1
+# HELP synergy_wholesale_domain_auto_renew_enabled Domain auto-renewal status
+# TYPE synergy_wholesale_domain_auto_renew_enabled gauge
+synergy_wholesale_domain_auto_renew_enabled{domain="example.com"} 1
 
-# HELP domain_dnssec_key_info Domain DNSSEC key info
-# TYPE domain_dnssec_key_info gauge
-domain_dnssec_key_count{algorithm="13",digest="6BDEC6...",digest_type="2",domain="example.com",key_tag="1234"} 1
+# HELP synergy_wholesale_domain_dnssec_key_info Domain DNSSEC key info
+# TYPE synergy_wholesale_domain_dnssec_key_info gauge
+synergy_wholesale_domain_dnssec_key_info{algorithm="13",digest="6BDEC6...",digest_type="2",domain="example.com",key_tag="1234"} 1
 
-# HELP domain_expiry_timestamp_seconds Domain expiry timestamp in seconds
-# TYPE domain_expiry_timestamp_seconds gauge
-domain_expiry_timestamp_seconds{domain="example.com", status="ok"} 1735689600
+# HELP synergy_wholesale_domain_expiry_timestamp_seconds Domain expiry timestamp in seconds
+# TYPE synergy_wholesale_domain_expiry_timestamp_seconds gauge
+synergy_wholesale_domain_expiry_timestamp_seconds{domain="example.com", status="ok"} 1735689600
 
-# HELP domain_name_server_info Domain name server info
-# TYPE domain_name_server_info gauge
-domain_name_server_info{domain="example.com", name_server_info="ns1.example.com"} 1
-domain_name_server_info{domain="example.com", name_server_info="ns2.example.com"} 1
+# HELP synergy_wholesale_domain_name_server_info Domain name server info
+# TYPE synergy_wholesale_domain_name_server_info gauge
+synergy_wholesale_domain_name_server_info{domain="example.com", name_server="ns1.example.com"} 1
+synergy_wholesale_domain_name_server_info{domain="example.com", name_server="ns2.example.com"} 1
+
+# HELP synergy_wholesale_http_requests_total Total number of HTTP requests handled by the exporter.
+# TYPE synergy_wholesale_http_requests_total counter
+synergy_wholesale_http_requests_total{code="200",handler="metrics",method="GET"} 1
+
+# HELP synergy_wholesale_api_requests_total Total number of HTTP requests sent to the Synergy Wholesale API.
+# TYPE synergy_wholesale_api_requests_total counter
+synergy_wholesale_api_requests_total{code="200",result="success"} 1
 ```
