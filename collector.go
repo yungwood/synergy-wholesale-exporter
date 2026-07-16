@@ -62,13 +62,13 @@ func metricName(name string) string {
 	return prometheus.BuildFQName(metricNamespace, "", name)
 }
 
-func (collector *Collector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- collector.domainAutoRenew
+func (collector *Collector) Describe(channel chan<- *prometheus.Desc) {
+	channel <- collector.domainAutoRenew
 	if *enableDNSSECMetrics {
-		ch <- collector.domainDNSSECKeyInfo
+		channel <- collector.domainDNSSECKeyInfo
 	}
-	ch <- collector.domainExpiry
-	ch <- collector.domainNameServer
+	channel <- collector.domainExpiry
+	channel <- collector.domainNameServer
 }
 
 func (collector *Collector) Collect(channel chan<- prometheus.Metric) {

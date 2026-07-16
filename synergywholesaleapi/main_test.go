@@ -156,15 +156,15 @@ func TestDateStringToTimestamp(t *testing.T) {
 }
 
 func TestSendSOAPRequestReturnsErrorForNon2xxStatus(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("request method = %s, want POST", r.Method)
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost {
+			t.Errorf("request method = %s, want POST", request.Method)
 		}
-		if got := r.Header.Get("Content-Type"); got != "text/xml; charset=utf-8" {
+		if got := request.Header.Get("Content-Type"); got != "text/xml; charset=utf-8" {
 			t.Errorf("content type = %q, want text/xml; charset=utf-8", got)
 		}
 
-		http.Error(w, "upstream unavailable", http.StatusServiceUnavailable)
+		http.Error(writer, "upstream unavailable", http.StatusServiceUnavailable)
 	}))
 	defer server.Close()
 

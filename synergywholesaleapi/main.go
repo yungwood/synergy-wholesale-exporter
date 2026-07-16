@@ -231,7 +231,11 @@ func sendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
 		SynergyWholesaleAPIRequestsTotal.WithLabelValues("0", "error").Inc()
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Debug("Error closing Synergy Wholesale API response body", "error", err)
+		}
+	}()
 
 	// Log the response status code
 	slog.Debug("Request successful", "response_code", resp.StatusCode)
