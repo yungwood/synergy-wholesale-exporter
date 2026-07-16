@@ -12,6 +12,8 @@ func TestApplyEnvConfigFromFlagSetUsesEnvironmentForUnsetFlags(t *testing.T) {
 	t.Setenv(envAPIKey, "env-api-key")
 	t.Setenv(envAddress, ":9090")
 	t.Setenv(envCacheTTL, "120")
+	t.Setenv(envBackoffMin, "30")
+	t.Setenv(envBackoffMax, "600")
 	t.Setenv(envDebug, "true")
 	t.Setenv(envJSON, "true")
 	t.Setenv(envGolangMetrics, "true")
@@ -33,6 +35,12 @@ func TestApplyEnvConfigFromFlagSetUsesEnvironmentForUnsetFlags(t *testing.T) {
 	if *config.cacheTTLSeconds != 120 {
 		t.Errorf("cache TTL = %d, want 120", *config.cacheTTLSeconds)
 	}
+	if *config.apiErrorBackoffMin != 30 {
+		t.Errorf("API error backoff min = %d, want 30", *config.apiErrorBackoffMin)
+	}
+	if *config.apiErrorBackoffMax != 600 {
+		t.Errorf("API error backoff max = %d, want 600", *config.apiErrorBackoffMax)
+	}
 	if !*config.debugLogging {
 		t.Error("debug logging = false, want true")
 	}
@@ -53,6 +61,8 @@ func TestApplyEnvConfigFromFlagSetKeepsExplicitFlags(t *testing.T) {
 	t.Setenv(envAPIKey, "env-api-key")
 	t.Setenv(envAddress, ":9090")
 	t.Setenv(envCacheTTL, "120")
+	t.Setenv(envBackoffMin, "30")
+	t.Setenv(envBackoffMax, "600")
 	t.Setenv(envDebug, "true")
 	t.Setenv(envJSON, "true")
 	t.Setenv(envGolangMetrics, "true")
@@ -62,6 +72,8 @@ func TestApplyEnvConfigFromFlagSetKeepsExplicitFlags(t *testing.T) {
 	mustSetFlag(t, flags, "apikey", "flag-api-key")
 	mustSetFlag(t, flags, "address", ":8081")
 	mustSetFlag(t, flags, "cache-ttl", "300")
+	mustSetFlag(t, flags, "api-error-backoff-min", "45")
+	mustSetFlag(t, flags, "api-error-backoff-max", "900")
 	mustSetFlag(t, flags, "debug", "false")
 	mustSetFlag(t, flags, "json", "false")
 	mustSetFlag(t, flags, "golang-metrics", "false")
@@ -82,6 +94,12 @@ func TestApplyEnvConfigFromFlagSetKeepsExplicitFlags(t *testing.T) {
 	}
 	if *config.cacheTTLSeconds != 300 {
 		t.Errorf("cache TTL = %d, want 300", *config.cacheTTLSeconds)
+	}
+	if *config.apiErrorBackoffMin != 45 {
+		t.Errorf("API error backoff min = %d, want 45", *config.apiErrorBackoffMin)
+	}
+	if *config.apiErrorBackoffMax != 900 {
+		t.Errorf("API error backoff max = %d, want 900", *config.apiErrorBackoffMax)
 	}
 	if *config.debugLogging {
 		t.Error("debug logging = true, want false")
@@ -132,6 +150,8 @@ func newTestEnvConfig() (*flag.FlagSet, envConfig) {
 	var apiKey string
 	var listenAddress = ":8080"
 	var cacheTTLSeconds int64 = 3600
+	var apiErrorBackoffMin int64 = 60
+	var apiErrorBackoffMax int64 = 3600
 	var debugLogging bool
 	var jsonLogging bool
 	var enableGolangMetrics bool
@@ -141,6 +161,8 @@ func newTestEnvConfig() (*flag.FlagSet, envConfig) {
 	flags.StringVar(&apiKey, "apikey", apiKey, "")
 	flags.StringVar(&listenAddress, "address", listenAddress, "")
 	flags.Int64Var(&cacheTTLSeconds, "cache-ttl", cacheTTLSeconds, "")
+	flags.Int64Var(&apiErrorBackoffMin, "api-error-backoff-min", apiErrorBackoffMin, "")
+	flags.Int64Var(&apiErrorBackoffMax, "api-error-backoff-max", apiErrorBackoffMax, "")
 	flags.BoolVar(&debugLogging, "debug", debugLogging, "")
 	flags.BoolVar(&jsonLogging, "json", jsonLogging, "")
 	flags.BoolVar(&enableGolangMetrics, "golang-metrics", enableGolangMetrics, "")
@@ -151,6 +173,8 @@ func newTestEnvConfig() (*flag.FlagSet, envConfig) {
 		apiKey:              &apiKey,
 		listenAddress:       &listenAddress,
 		cacheTTLSeconds:     &cacheTTLSeconds,
+		apiErrorBackoffMin:  &apiErrorBackoffMin,
+		apiErrorBackoffMax:  &apiErrorBackoffMax,
 		debugLogging:        &debugLogging,
 		jsonLogging:         &jsonLogging,
 		enableGolangMetrics: &enableGolangMetrics,

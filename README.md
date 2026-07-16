@@ -73,6 +73,8 @@ The exporter uses a caching mechanism to reduce the frequency of API calls to th
 
 When prometheus scrapes the `/metrics` endpoint, the cached API response is used to generate metrics if the TTL has not yet expired. If the cache has expired, the exporter will synchronously retrieve updated domain data from the API.
 
+If a refresh fails, the exporter backs off before retrying the Synergy Wholesale API. The backoff starts at 60 seconds, doubles after repeated failures, and is capped at 3600 seconds by default. During backoff, the exporter returns the last cached response if one is available.
+
 ## Configuration Parameters
 
 | Flag               | Environment Variable                        | Description                                                  | Default | Required |
@@ -81,6 +83,8 @@ When prometheus scrapes the `/metrics` endpoint, the cached API response is used
 | `--apikey`         | `SYNERGY_WHOLESALE_API_KEY`                 | Synergy Wholesale API Key                                    | None    | Yes      |
 | `--address`        | `SYNERGY_WHOLESALE_EXPORTER_ADDRESS`        | Listening address for the metrics endpoint                   | `:8080` | No       |
 | `--cache-ttl`      | `SYNERGY_WHOLESALE_EXPORTER_CACHE_TTL`      | Cache TTL for API responses (in seconds)                     | `3600`  | No       |
+| `--api-error-backoff-min` | `SYNERGY_WHOLESALE_EXPORTER_API_ERROR_BACKOFF_MIN` | Minimum backoff after failed API requests (in seconds) | `60` | No |
+| `--api-error-backoff-max` | `SYNERGY_WHOLESALE_EXPORTER_API_ERROR_BACKOFF_MAX` | Maximum backoff after failed API requests (in seconds) | `3600` | No |
 | `--debug`          | `SYNERGY_WHOLESALE_EXPORTER_DEBUG`          | Enable debug logging (`true` or `false`)                     | `false` | No       |
 | `--json`           | `SYNERGY_WHOLESALE_EXPORTER_JSON`           | Output logs in JSON format (`true` or `false`)               | `false` | No       |
 | `--golang-metrics` | `SYNERGY_WHOLESALE_EXPORTER_GOLANG_METRICS` | Enable default golang metrics collectors (`true` or `false`) | `false` | No       |

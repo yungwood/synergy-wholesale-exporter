@@ -12,6 +12,8 @@ const (
 	envAPIKey        = "SYNERGY_WHOLESALE_API_KEY"
 	envAddress       = "SYNERGY_WHOLESALE_EXPORTER_ADDRESS"
 	envCacheTTL      = "SYNERGY_WHOLESALE_EXPORTER_CACHE_TTL"
+	envBackoffMin    = "SYNERGY_WHOLESALE_EXPORTER_API_ERROR_BACKOFF_MIN"
+	envBackoffMax    = "SYNERGY_WHOLESALE_EXPORTER_API_ERROR_BACKOFF_MAX"
 	envDebug         = "SYNERGY_WHOLESALE_EXPORTER_DEBUG"
 	envJSON          = "SYNERGY_WHOLESALE_EXPORTER_JSON"
 	envGolangMetrics = "SYNERGY_WHOLESALE_EXPORTER_GOLANG_METRICS"
@@ -24,6 +26,8 @@ func applyEnvConfig() error {
 		apiKey:              apiKey,
 		listenAddress:       listenAddress,
 		cacheTTLSeconds:     cacheTTLSeconds,
+		apiErrorBackoffMin:  apiErrorBackoffMin,
+		apiErrorBackoffMax:  apiErrorBackoffMax,
 		debugLogging:        debugLogging,
 		jsonLogging:         jsonLogging,
 		enableGolangMetrics: enableGolangMetrics,
@@ -36,6 +40,8 @@ type envConfig struct {
 	apiKey              *string
 	listenAddress       *string
 	cacheTTLSeconds     *int64
+	apiErrorBackoffMin  *int64
+	apiErrorBackoffMax  *int64
 	debugLogging        *bool
 	jsonLogging         *bool
 	enableGolangMetrics *bool
@@ -48,6 +54,12 @@ func applyEnvConfigFromFlagSet(flags *flag.FlagSet, config envConfig) error {
 	setStringFromEnv(flags, "address", config.listenAddress, envAddress)
 
 	if err := setInt64FromEnv(flags, "cache-ttl", config.cacheTTLSeconds, envCacheTTL); err != nil {
+		return err
+	}
+	if err := setInt64FromEnv(flags, "api-error-backoff-min", config.apiErrorBackoffMin, envBackoffMin); err != nil {
+		return err
+	}
+	if err := setInt64FromEnv(flags, "api-error-backoff-max", config.apiErrorBackoffMax, envBackoffMax); err != nil {
 		return err
 	}
 	if err := setBoolFromEnv(flags, "debug", config.debugLogging, envDebug); err != nil {

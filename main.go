@@ -27,6 +27,8 @@ var (
 	debugLogging        = flag.Bool("debug", false, "enable debug logging")
 	jsonLogging         = flag.Bool("json", false, "output logs in JSON format")
 	cacheTTLSeconds     = flag.Int64("cache-ttl", 3600, "cache TTL value in seconds for Synergy Wholesale API requests")
+	apiErrorBackoffMin  = flag.Int64("api-error-backoff-min", 60, "minimum backoff value in seconds after failed Synergy Wholesale API requests")
+	apiErrorBackoffMax  = flag.Int64("api-error-backoff-max", 3600, "maximum backoff value in seconds after failed Synergy Wholesale API requests")
 	enableGolangMetrics = flag.Bool("golang-metrics", false, "enable the default golang prometheus collectors")
 	enableDNSSECMetrics = flag.Bool("dnssec-metrics", false, "enable DNSSEC key info metrics")
 )
@@ -112,6 +114,8 @@ func main() {
 		"Starting web server",
 		"listen_address", *listenAddress,
 		"cache_ttl_seconds", *cacheTTLSeconds,
+		"api_error_backoff_min_seconds", *apiErrorBackoffMin,
+		"api_error_backoff_max_seconds", *apiErrorBackoffMax,
 		"golang_metrics_enabled", *enableGolangMetrics,
 		"dnssec_metrics_enabled", *enableDNSSECMetrics,
 		"debug_logging", *debugLogging,
