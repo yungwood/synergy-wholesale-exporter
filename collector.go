@@ -26,6 +26,14 @@ var HTTPRequestsTotal = prometheus.NewCounterVec(
 	[]string{"code", "method", "handler"},
 )
 
+var CacheLastSuccessfulRefreshTimestamp = prometheus.NewGauge(
+	prometheus.GaugeOpts{
+		Namespace: metricNamespace,
+		Name:      "cache_last_successful_refresh_timestamp_seconds",
+		Help:      "Unix timestamp of the last successful Synergy Wholesale domain cache refresh.",
+	},
+)
+
 type Collector struct {
 	domainAutoRenew     *prometheus.Desc
 	domainExpiry        *prometheus.Desc

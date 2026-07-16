@@ -85,7 +85,13 @@ func main() {
 	// add build information metric
 	BuildInfo.WithLabelValues(version, revision, runtime.Version()).Set(1)
 	collector := newCollector()
-	prometheusRegistry.MustRegister(BuildInfo, HTTPRequestsTotal, api.SynergyWholesaleAPIRequestsTotal, collector)
+	prometheusRegistry.MustRegister(
+		BuildInfo,
+		HTTPRequestsTotal,
+		CacheLastSuccessfulRefreshTimestamp,
+		api.SynergyWholesaleAPIRequestsTotal,
+		collector,
+	)
 	http.Handle("/metrics", instrumentHTTPHandler(
 		"metrics",
 		promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{}),
