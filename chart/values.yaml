@@ -1,0 +1,104 @@
+image:
+  repository: yungwood/synergy-wholesale-exporter
+  pullPolicy: IfNotPresent
+  tag: "" # defaults to chart appVersion
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+
+args: []
+
+# command: []
+
+env: []
+
+envFrom: []
+
+config:
+  address: ":8080"
+  cacheTTL: 3600
+  debug: false
+  json: false
+  golangMetrics: false
+  dnssecMetrics: false
+
+secret:
+  # If create is false, create a Kubernetes Secret separately and set name if it
+  # differs from the chart fullname.
+  create: false
+  name: ""
+  # Used only when create is true.
+  resellerID: ""
+  apiKey: ""
+  resellerIDKey: reseller-id
+  apiKeyKey: api-key
+
+prometheus:
+  serviceMonitor:
+    enabled: true
+    labels: {}
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 3000
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /liveness
+    port: http
+readinessProbe:
+  httpGet:
+    path: /readiness
+    port: http
+
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+extraDeploy: []

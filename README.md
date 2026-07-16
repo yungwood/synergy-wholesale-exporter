@@ -35,26 +35,30 @@ Metrics will be available at `:8080/metrics`.
 
 ### Kubernetes
 
-You can deploy Synergy Wholesale Exporter using the provided [helm chart](https://github.com/yungwood/helm-charts/blob/main/charts/synergy-wholesale-exporter).
+You can deploy Synergy Wholesale Exporter using the published [Helm chart](https://github.com/yungwood/helm-charts/blob/main/charts/synergy-wholesale-exporter). Chart releases are published to [yungwood/helm-charts](https://github.com/yungwood/helm-charts) with each release; the chart `version` and `appVersion` are aligned with the tag.
 
 ```bash
 helm repo add yungwood https://yungwood.github.io/helm-charts/
-helm install --name your-release yungwood/synergy-wholesale-exporter
+helm repo update
+helm install your-release yungwood/synergy-wholesale-exporter \
+  --set secret.name=synergy-wholesale-exporter
 ```
+
+See the [chart README](chart/README.md) for configuration and credential options.
 
 ## Metrics
 
 The exporter exposes the following metrics:
 
-| Metric                            | Type  | Description                                                                          | Labels                                                                                                                                                        |
-| --------------------------------- | ----- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `synergy_wholesale_build_info` | Gauge | Build information for the application.<br>Gauge always set to `1`. | - `version`: Application version<br>- `revision`: Git revision<br>- `goversion`: Go runtime version |
-| `synergy_wholesale_domain_auto_renew_enabled` | Gauge | Indicates whether auto-renew is enabled for a domain. | - `domain`: Domain name |
-| `synergy_wholesale_domain_dnssec_key_info` | Gauge | Info metric for each DNSSEC key configured for a domain. Disabled by default.<br>Gauge always set to `1`. | - `domain`: Domain name<br>- `key_tag`: DNSSEC Key Tag<br>- `algorithm`: DNSSEC Algorithm<br>- `digest_type`: DNSSEC Digest Type<br>- `digest`: DNSSEC Digest |
-| `synergy_wholesale_domain_expiry_timestamp_seconds` | Gauge | UNIX timestamp of the domain expiration. | - `domain`: Domain name<br>- `status`: Domain status (e.g. `ok`) |
-| `synergy_wholesale_domain_name_server_info` | Gauge | Information about the name servers for a domain.<br>Gauge always set to `1`. | - `domain`: Domain name<br>- `name_server`: Name server (e.g. `ns1.example.com`) |
-| `synergy_wholesale_http_requests_total` | Counter | Total number of HTTP requests handled by the exporter. | - `code`: HTTP status code<br>- `method`: HTTP method<br>- `handler`: Handler name (`metrics`, `liveness`, `readiness`) |
-| `synergy_wholesale_api_requests_total` | Counter | Total number of HTTP requests sent to the Synergy Wholesale API. | - `code`: HTTP status code (`0` for transport errors)<br>- `result`: Request result (`success` or `error`) |
+| Metric                                              | Type    | Description                                                                                               | Labels                                                                                                                                                        |
+| --------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `synergy_wholesale_build_info`                      | Gauge   | Build information for the application.<br>Gauge always set to `1`.                                        | - `version`: Application version<br>- `revision`: Git revision<br>- `goversion`: Go runtime version                                                           |
+| `synergy_wholesale_domain_auto_renew_enabled`       | Gauge   | Indicates whether auto-renew is enabled for a domain.                                                     | - `domain`: Domain name                                                                                                                                       |
+| `synergy_wholesale_domain_dnssec_key_info`          | Gauge   | Info metric for each DNSSEC key configured for a domain. Disabled by default.<br>Gauge always set to `1`. | - `domain`: Domain name<br>- `key_tag`: DNSSEC Key Tag<br>- `algorithm`: DNSSEC Algorithm<br>- `digest_type`: DNSSEC Digest Type<br>- `digest`: DNSSEC Digest |
+| `synergy_wholesale_domain_expiry_timestamp_seconds` | Gauge   | UNIX timestamp of the domain expiration.                                                                  | - `domain`: Domain name<br>- `status`: Domain status (e.g. `ok`)                                                                                              |
+| `synergy_wholesale_domain_name_server_info`         | Gauge   | Information about the name servers for a domain.<br>Gauge always set to `1`.                              | - `domain`: Domain name<br>- `name_server`: Name server (e.g. `ns1.example.com`)                                                                              |
+| `synergy_wholesale_http_requests_total`             | Counter | Total number of HTTP requests handled by the exporter.                                                    | - `code`: HTTP status code<br>- `method`: HTTP method<br>- `handler`: Handler name (`metrics`, `liveness`, `readiness`)                                       |
+| `synergy_wholesale_api_requests_total`              | Counter | Total number of HTTP requests sent to the Synergy Wholesale API.                                          | - `code`: HTTP status code (`0` for transport errors)<br>- `result`: Request result (`success` or `error`)                                                    |
 
 ---
 
@@ -70,17 +74,17 @@ When prometheus scrapes the `/metrics` endpoint, the cached API response is used
 
 ## Configuration Parameters
 
-| Flag | Environment Variable | Description | Default | Required |
-|-----------------------|---------------------------------------------|-------------------------------------------------------|-----------------|----------|
-| `--reseller-id` | `SYNERGY_WHOLESALE_RESELLER_ID` | Synergy Wholesale Reseller ID | None | Yes |
-| `--apikey` | `SYNERGY_WHOLESALE_API_KEY` | Synergy Wholesale API Key | None | Yes |
-| `--address` | `SYNERGY_WHOLESALE_EXPORTER_ADDRESS` | Listening address for the metrics endpoint | `:8080` | No |
-| `--cache-ttl` | `SYNERGY_WHOLESALE_EXPORTER_CACHE_TTL` | Cache TTL for API responses (in seconds) | `3600` | No |
-| `--debug` | `SYNERGY_WHOLESALE_EXPORTER_DEBUG` | Enable debug logging (`true` or `false`) | `false` | No |
-| `--json` | `SYNERGY_WHOLESALE_EXPORTER_JSON` | Output logs in JSON format (`true` or `false`) | `false` | No |
-| `--golang-metrics` | `SYNERGY_WHOLESALE_EXPORTER_GOLANG_METRICS` | Enable default golang metrics collectors (`true` or `false`) | `false` | No |
-| `--dnssec-metrics` | `SYNERGY_WHOLESALE_EXPORTER_DNSSEC_METRICS` | Enable DNSSEC key info metrics (`true` or `false`) | `false` | No |
-| `--version` | N/A | Print application version and exit | `false` | No |
+| Flag               | Environment Variable                        | Description                                                  | Default | Required |
+| ------------------ | ------------------------------------------- | ------------------------------------------------------------ | ------- | -------- |
+| `--reseller-id`    | `SYNERGY_WHOLESALE_RESELLER_ID`             | Synergy Wholesale Reseller ID                                | None    | Yes      |
+| `--apikey`         | `SYNERGY_WHOLESALE_API_KEY`                 | Synergy Wholesale API Key                                    | None    | Yes      |
+| `--address`        | `SYNERGY_WHOLESALE_EXPORTER_ADDRESS`        | Listening address for the metrics endpoint                   | `:8080` | No       |
+| `--cache-ttl`      | `SYNERGY_WHOLESALE_EXPORTER_CACHE_TTL`      | Cache TTL for API responses (in seconds)                     | `3600`  | No       |
+| `--debug`          | `SYNERGY_WHOLESALE_EXPORTER_DEBUG`          | Enable debug logging (`true` or `false`)                     | `false` | No       |
+| `--json`           | `SYNERGY_WHOLESALE_EXPORTER_JSON`           | Output logs in JSON format (`true` or `false`)               | `false` | No       |
+| `--golang-metrics` | `SYNERGY_WHOLESALE_EXPORTER_GOLANG_METRICS` | Enable default golang metrics collectors (`true` or `false`) | `false` | No       |
+| `--dnssec-metrics` | `SYNERGY_WHOLESALE_EXPORTER_DNSSEC_METRICS` | Enable DNSSEC key info metrics (`true` or `false`)           | `false` | No       |
+| `--version`        | N/A                                         | Print application version and exit                           | `false` | No       |
 
 Command-line flags take precedence over environment variables.
 

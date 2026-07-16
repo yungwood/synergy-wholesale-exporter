@@ -1,0 +1,9 @@
+apiVersion: v2
+name: synergy-wholesale-exporter
+description: Prometheus exporter for Synergy Wholesale domains
+type: application
+# Release publishing overwrites version and appVersion for tagged builds.
+version: 0.0.0
+appVersion: "main"
+maintainers:
+  - name: Yung Wood
