@@ -1,4 +1,4 @@
-name: golangci-lint
+name: go
 
 on:
   push:
@@ -7,19 +7,30 @@ on:
     paths:
       - go.mod
       - go.sum
-      - "*.go"
+      - "**/*.go"
+      - "synergywholesaleapi/testdata/**"
   pull_request:
     paths:
       - go.mod
       - go.sum
-      - "*.go"
+      - "**/*.go"
+      - "synergywholesaleapi/testdata/**"
 
 permissions:
   contents: read
 
 jobs:
-  golangci:
-    name: lint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+      - name: Test
+        run: go test ./...
+
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
