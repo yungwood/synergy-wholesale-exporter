@@ -35,12 +35,16 @@ Metrics will be available at `:8080/metrics`.
 
 ### Kubernetes
 
-You can deploy Synergy Wholesale Exporter using the provided [helm chart](https://github.com/yungwood/helm-charts/blob/main/charts/synergy-wholesale-exporter).
+You can deploy Synergy Wholesale Exporter using the published [Helm chart](https://github.com/yungwood/helm-charts/blob/main/charts/synergy-wholesale-exporter). Chart releases are published to [yungwood/helm-charts](https://github.com/yungwood/helm-charts) with each release; the chart `version` and `appVersion` are aligned with the tag.
 
 ```bash
 helm repo add yungwood https://yungwood.github.io/helm-charts/
-helm install --name your-release yungwood/synergy-wholesale-exporter
+helm repo update
+helm install your-release yungwood/synergy-wholesale-exporter \
+  --set secret.name=synergy-wholesale-exporter
 ```
+
+See the [chart README](chart/README.md) for configuration and credential options.
 
 ## Metrics
 

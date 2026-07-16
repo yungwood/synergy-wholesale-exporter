@@ -1,0 +1,10 @@
+secret:
+  create: true
+  resellerID: "12345"
+  apiKey: "test-api-key"
+
+prometheus:
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false

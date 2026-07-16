@@ -1,0 +1,418 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "properties": {
+        "affinity": {
+            "properties": {},
+            "type": "object"
+        },
+        "args": {
+            "type": "array"
+        },
+        "command": {
+            "type": "array"
+        },
+        "config": {
+            "additionalProperties": false,
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "apiErrorBackoffMax": {
+                    "type": "integer"
+                },
+                "apiErrorBackoffMin": {
+                    "type": "integer"
+                },
+                "cacheTTL": {
+                    "type": "integer"
+                },
+                "debug": {
+                    "type": "boolean"
+                },
+                "dnssecMetrics": {
+                    "type": "boolean"
+                },
+                "golangMetrics": {
+                    "type": "boolean"
+                },
+                "json": {
+                    "type": "boolean"
+                }
+            },
+            "required": ["address", "cacheTTL", "apiErrorBackoffMin", "apiErrorBackoffMax", "debug", "json", "golangMetrics", "dnssecMetrics"],
+            "type": "object"
+        },
+        "fullnameOverride": {
+            "type": "string"
+        },
+        "extraDeploy": {
+            "items": {
+                "oneOf": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "type": "object"
+                    }
+                ]
+            },
+            "type": "array"
+        },
+        "env": {
+            "items": {
+                "type": "object"
+            },
+            "type": "array"
+        },
+        "envFrom": {
+            "items": {
+                "type": "object"
+            },
+            "type": "array"
+        },
+        "image": {
+            "additionalProperties": false,
+            "properties": {
+                "pullPolicy": {
+                    "type": "string",
+                    "enum": ["Always", "IfNotPresent", "Never"]
+                },
+                "repository": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            },
+            "required": ["repository", "pullPolicy"],
+            "type": "object"
+        },
+        "imagePullSecrets": {
+            "type": "array"
+        },
+        "livenessProbe": {
+            "properties": {},
+            "type": "object"
+        },
+        "nameOverride": {
+            "type": "string"
+        },
+        "nodeSelector": {
+            "properties": {},
+            "type": "object"
+        },
+        "podAnnotations": {
+            "properties": {},
+            "type": "object"
+        },
+        "podLabels": {
+            "properties": {},
+            "type": "object"
+        },
+        "podSecurityContext": {
+            "properties": {},
+            "type": "object"
+        },
+        "prometheus": {
+            "additionalProperties": false,
+            "properties": {
+                "serviceMonitor": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "additionalProperties": {
+                                "type": "string"
+                            },
+                            "properties": {},
+                            "type": "object"
+                        }
+                    },
+                    "required": ["enabled", "labels"],
+                    "type": "object"
+                },
+                "prometheusRule": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "alerts": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "apiRequestErrors": {
+                                    "$ref": "#/$defs/apiRequestErrorsAlert"
+                                },
+                                "cacheStale": {
+                                    "$ref": "#/$defs/cacheStaleAlert"
+                                },
+                                "domainAutoRenewDisabled": {
+                                    "$ref": "#/$defs/basicAlert"
+                                },
+                                "domainExpiringSoon": {
+                                    "$ref": "#/$defs/domainExpiringSoonAlert"
+                                },
+                                "domainExpiryCritical": {
+                                    "$ref": "#/$defs/domainExpiryCriticalAlert"
+                                },
+                                "exporterDown": {
+                                    "$ref": "#/$defs/basicAlert"
+                                }
+                            },
+                            "required": ["exporterDown", "apiRequestErrors", "cacheStale", "domainExpiringSoon", "domainExpiryCritical", "domainAutoRenewDisabled"],
+                            "type": "object"
+                        },
+                        "defaultAlertLabels": {
+                            "additionalProperties": {
+                                "type": "string"
+                            },
+                            "properties": {},
+                            "type": "object"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "additionalProperties": {
+                                "type": "string"
+                            },
+                            "properties": {},
+                            "type": "object"
+                        }
+                    },
+                    "required": ["enabled", "labels", "defaultAlertLabels", "alerts"],
+                    "type": "object"
+                }
+            },
+            "required": ["serviceMonitor", "prometheusRule"],
+            "type": "object"
+        },
+        "readinessProbe": {
+            "properties": {},
+            "type": "object"
+        },
+        "replicaCount": {
+            "type": "integer"
+        },
+        "revisionHistoryLimit": {
+            "type": "integer"
+        },
+        "resources": {
+            "properties": {
+                "limits": {
+                    "properties": {},
+                    "type": "object"
+                },
+                "requests": {
+                    "properties": {},
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
+        "securityContext": {
+            "properties": {},
+            "type": "object"
+        },
+        "secret": {
+            "additionalProperties": false,
+            "properties": {
+                "apiKey": {
+                    "type": "string"
+                },
+                "apiKeyKey": {
+                    "type": "string"
+                },
+                "create": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resellerID": {
+                    "type": "string"
+                },
+                "resellerIDKey": {
+                    "type": "string"
+                }
+            },
+            "required": ["create", "name", "resellerID", "apiKey", "resellerIDKey", "apiKeyKey"],
+            "type": "object"
+        },
+        "service": {
+            "properties": {
+                "port": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "serviceAccount": {
+            "properties": {
+                "annotations": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "properties": {},
+                    "type": "object"
+                },
+                "automount": {
+                    "type": "boolean"
+                },
+                "create": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "tolerations": {
+            "type": "array"
+        },
+        "volumeMounts": {
+            "items": {
+                "properties": {
+                    "mountPath": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "readOnly": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "type": "array"
+        },
+        "volumes": {
+            "items": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "secret": {
+                        "properties": {
+                            "optional": {
+                                "type": "boolean"
+                            },
+                            "secretName": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "type": "array"
+        }
+    },
+    "$defs": {
+        "alertAnnotations": {
+            "additionalProperties": {
+                "type": "string"
+            },
+            "properties": {},
+            "type": "object"
+        },
+        "alertLabels": {
+            "additionalProperties": {
+                "type": "string"
+            },
+            "properties": {},
+            "type": "object"
+        },
+        "basicAlert": {
+            "properties": {
+                "annotations": {
+                    "$ref": "#/$defs/alertAnnotations"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "for": {
+                    "type": "string"
+                },
+                "labels": {
+                    "$ref": "#/$defs/alertLabels"
+                }
+            },
+            "required": ["enabled", "for", "labels", "annotations"],
+            "type": "object"
+        },
+        "apiRequestErrorsAlert": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/basicAlert"
+                },
+                {
+                    "properties": {
+                        "threshold": {
+                            "type": "integer"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["window", "threshold"]
+                }
+            ]
+        },
+        "cacheStaleAlert": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/basicAlert"
+                },
+                {
+                    "properties": {
+                        "thresholdSeconds": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": ["thresholdSeconds"]
+                }
+            ]
+        },
+        "domainExpiringSoonAlert": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/basicAlert"
+                },
+                {
+                    "properties": {
+                        "criticalThresholdDays": {
+                            "type": "integer"
+                        },
+                        "thresholdDays": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": ["thresholdDays", "criticalThresholdDays"]
+                }
+            ]
+        },
+        "domainExpiryCriticalAlert": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/basicAlert"
+                },
+                {
+                    "properties": {
+                        "thresholdDays": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": ["thresholdDays"]
+                }
+            ]
+        }
+    },
+    "required": ["image", "config", "secret", "prometheus", "livenessProbe", "readinessProbe", "replicaCount", "resources", "extraDeploy", "env", "envFrom"],
+    "type": "object"
+}
