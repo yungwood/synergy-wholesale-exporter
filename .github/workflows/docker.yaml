@@ -4,15 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "*"
+      - "main"
     tags:
       - "*"
-    paths-ignore:
-      - ".github/**"
-      - ".gitignore"
-      - LICENSE
-      - README.md
-      - renovate.json
   pull_request:
     branches:
       - "main"
