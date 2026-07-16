@@ -126,9 +126,58 @@
                     },
                     "required": ["enabled", "labels"],
                     "type": "object"
+                },
+                "prometheusRule": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "alerts": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "apiRequestErrors": {
+                                    "$ref": "#/$defs/apiRequestErrorsAlert"
+                                },
+                                "cacheStale": {
+                                    "$ref": "#/$defs/cacheStaleAlert"
+                                },
+                                "domainAutoRenewDisabled": {
+                                    "$ref": "#/$defs/basicAlert"
+                                },
+                                "domainExpiringSoon": {
+                                    "$ref": "#/$defs/domainExpiringSoonAlert"
+                                },
+                                "domainExpiryCritical": {
+                                    "$ref": "#/$defs/domainExpiryCriticalAlert"
+                                },
+                                "exporterDown": {
+                                    "$ref": "#/$defs/basicAlert"
+                                }
+                            },
+                            "required": ["exporterDown", "apiRequestErrors", "cacheStale", "domainExpiringSoon", "domainExpiryCritical", "domainAutoRenewDisabled"],
+                            "type": "object"
+                        },
+                        "defaultAlertLabels": {
+                            "additionalProperties": {
+                                "type": "string"
+                            },
+                            "properties": {},
+                            "type": "object"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "labels": {
+                            "additionalProperties": {
+                                "type": "string"
+                            },
+                            "properties": {},
+                            "type": "object"
+                        }
+                    },
+                    "required": ["enabled", "labels", "defaultAlertLabels", "alerts"],
+                    "type": "object"
                 }
             },
-            "required": ["serviceMonitor"],
+            "required": ["serviceMonitor", "prometheusRule"],
             "type": "object"
         },
         "readinessProbe": {
@@ -256,6 +305,106 @@
                 "type": "object"
             },
             "type": "array"
+        }
+    },
+    "$defs": {
+        "alertAnnotations": {
+            "additionalProperties": {
+                "type": "string"
+            },
+            "properties": {},
+            "type": "object"
+        },
+        "alertLabels": {
+            "additionalProperties": {
+                "type": "string"
+            },
+            "properties": {},
+            "type": "object"
+        },
+        "basicAlert": {
+            "properties": {
+                "annotations": {
+                    "$ref": "#/$defs/alertAnnotations"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "for": {
+                    "type": "string"
+                },
+                "labels": {
+                    "$ref": "#/$defs/alertLabels"
+                }
+            },
+            "required": ["enabled", "for", "labels", "annotations"],
+            "type": "object"
+        },
+        "apiRequestErrorsAlert": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/basicAlert"
+                },
+                {
+                    "properties": {
+                        "threshold": {
+                            "type": "integer"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    },
+                    "required": ["window", "threshold"]
+                }
+            ]
+        },
+        "cacheStaleAlert": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/basicAlert"
+                },
+                {
+                    "properties": {
+                        "thresholdSeconds": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": ["thresholdSeconds"]
+                }
+            ]
+        },
+        "domainExpiringSoonAlert": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/basicAlert"
+                },
+                {
+                    "properties": {
+                        "criticalThresholdDays": {
+                            "type": "integer"
+                        },
+                        "thresholdDays": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": ["thresholdDays", "criticalThresholdDays"]
+                }
+            ]
+        },
+        "domainExpiryCriticalAlert": {
+            "allOf": [
+                {
+                    "$ref": "#/$defs/basicAlert"
+                },
+                {
+                    "properties": {
+                        "thresholdDays": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": ["thresholdDays"]
+                }
+            ]
         }
     },
     "required": ["image", "config", "secret", "prometheus", "livenessProbe", "readinessProbe", "replicaCount", "resources", "extraDeploy", "env", "envFrom"],

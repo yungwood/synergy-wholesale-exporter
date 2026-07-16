@@ -40,6 +40,53 @@ prometheus:
   serviceMonitor:
     enabled: true
     labels: {}
+  prometheusRule:
+    enabled: false
+    labels: {}
+    defaultAlertLabels: {}
+    alerts:
+      exporterDown:
+        enabled: true
+        for: 10m
+        labels:
+          severity: critical
+        annotations: {}
+      apiRequestErrors:
+        enabled: true
+        for: 5m
+        window: 15m
+        threshold: 3
+        labels:
+          severity: warning
+        annotations: {}
+      cacheStale:
+        enabled: true
+        for: 10m
+        thresholdSeconds: 86400
+        labels:
+          severity: warning
+        annotations: {}
+      domainExpiringSoon:
+        enabled: true
+        for: 1h
+        thresholdDays: 30
+        criticalThresholdDays: 7
+        labels:
+          severity: warning
+        annotations: {}
+      domainExpiryCritical:
+        enabled: true
+        for: 15m
+        thresholdDays: 7
+        labels:
+          severity: critical
+        annotations: {}
+      domainAutoRenewDisabled:
+        enabled: false
+        for: 1h
+        labels:
+          severity: warning
+        annotations: {}
 
 serviceAccount:
   create: true

@@ -59,6 +59,16 @@ helm install synergy-wholesale-exporter yungwood/synergy-wholesale-exporter \
 | `secret.apiKeyKey` | Secret key containing API key | `api-key` |
 | `prometheus.serviceMonitor.enabled` | Create a Prometheus Operator `ServiceMonitor` | `true` |
 | `prometheus.serviceMonitor.labels` | Extra labels for the `ServiceMonitor` | `{}` |
+| `prometheus.prometheusRule.enabled` | Create a Prometheus Operator `PrometheusRule` | `false` |
+| `prometheus.prometheusRule.labels` | Extra labels for the `PrometheusRule` | `{}` |
+| `prometheus.prometheusRule.defaultAlertLabels` | Extra labels added to every alert | `{}` |
+| `prometheus.prometheusRule.alerts.*.enabled` | Enable an individual alert | See `values.yaml` |
+| `prometheus.prometheusRule.alerts.*.labels` | Labels for an individual alert | See `values.yaml` |
+| `prometheus.prometheusRule.alerts.*.annotations` | Extra annotations for an individual alert | `{}` |
+| `prometheus.prometheusRule.alerts.*.for` | Alert hold duration | See `values.yaml` |
+| `prometheus.prometheusRule.alerts.apiRequestErrors.window` | API error alert lookback window | `15m` |
+| `prometheus.prometheusRule.alerts.apiRequestErrors.threshold` | API error alert failure threshold within the lookback window | `3` |
+| `prometheus.prometheusRule.alerts.cacheStale.thresholdSeconds` | Cache stale alert threshold in seconds | `86400` |
 | `service.type` | Kubernetes Service type | `ClusterIP` |
 | `service.port` | Kubernetes Service port | `8080` |
 | `resources` | Container resource requests/limits | `{}` |
@@ -113,3 +123,23 @@ prometheus:
   serviceMonitor:
     enabled: false
 ```
+
+The chart can also create a `PrometheusRule` with starter alerts:
+
+```yaml
+prometheus:
+  prometheusRule:
+    enabled: true
+    defaultAlertLabels:
+      team: platform
+    alerts:
+      domainAutoRenewDisabled:
+        enabled: true
+      domainExpiringSoon:
+        labels:
+          severity: warning
+        annotations:
+          runbook_url: https://example.com/runbooks/domain-expiry
+```
+
+Included alerts cover exporter scrape health, Synergy Wholesale API errors, stale cache refreshes, domain expiry, and optionally disabled auto-renew.

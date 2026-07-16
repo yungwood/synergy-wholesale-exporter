@@ -1,0 +1,137 @@
+{{- if .Values.prometheus.prometheusRule.enabled -}}
+{{- $rule := .Values.prometheus.prometheusRule -}}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "synergy-wholesale-exporter.fullname" . }}
+  labels:
+    {{- include "synergy-wholesale-exporter.labels" . | nindent 4 }}
+    {{- with $rule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: synergy-wholesale-exporter
+      rules:
+        {{- with $rule.alerts.exporterDown }}
+        {{- if .enabled }}
+        - alert: SynergyWholesaleExporterDown
+          expr: up{job="{{ include "synergy-wholesale-exporter.fullname" $ }}"} == 0
+          for: {{ .for }}
+          labels:
+            {{- with $rule.defaultAlertLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .labels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: Synergy Wholesale exporter is down
+            description: Prometheus has not been able to scrape the Synergy Wholesale exporter.
+            {{- with .annotations }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- with $rule.alerts.apiRequestErrors }}
+        {{- if .enabled }}
+        - alert: SynergyWholesaleAPIRequestErrors
+          expr: increase(synergy_wholesale_api_requests_total{result="error"}[{{ .window }}]) > {{ .threshold }}
+          for: {{ .for }}
+          labels:
+            {{- with $rule.defaultAlertLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .labels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: Synergy Wholesale API requests are failing
+            description: The exporter has recorded more than {{ .threshold }} failed Synergy Wholesale API requests in the last {{ .window }}.
+            {{- with .annotations }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- with $rule.alerts.cacheStale }}
+        {{- if .enabled }}
+        - alert: SynergyWholesaleCacheStale
+          expr: time() - synergy_wholesale_cache_last_successful_refresh_timestamp_seconds > {{ .thresholdSeconds }}
+          for: {{ .for }}
+          labels:
+            {{- with $rule.defaultAlertLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .labels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: Synergy Wholesale exporter cache is stale
+            description: The exporter has not successfully refreshed its domain cache for more than {{ .thresholdSeconds }} seconds.
+            {{- with .annotations }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- with $rule.alerts.domainExpiringSoon }}
+        {{- if .enabled }}
+        - alert: SynergyWholesaleDomainExpiringSoon
+          expr: synergy_wholesale_domain_expiry_timestamp_seconds - time() < {{ mul .thresholdDays 86400 }} and synergy_wholesale_domain_expiry_timestamp_seconds - time() > {{ mul .criticalThresholdDays 86400 }}
+          for: {{ .for }}
+          labels:
+            {{- with $rule.defaultAlertLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .labels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: Synergy Wholesale domain is expiring soon
+            description: Domain {{ "{{ $labels.domain }}" }} expires within {{ .thresholdDays }} days.
+            {{- with .annotations }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- with $rule.alerts.domainExpiryCritical }}
+        {{- if .enabled }}
+        - alert: SynergyWholesaleDomainExpiryCritical
+          expr: synergy_wholesale_domain_expiry_timestamp_seconds - time() <= {{ mul .thresholdDays 86400 }}
+          for: {{ .for }}
+          labels:
+            {{- with $rule.defaultAlertLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .labels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: Synergy Wholesale domain expiry is critical
+            description: Domain {{ "{{ $labels.domain }}" }} expires within {{ .thresholdDays }} days or has already expired.
+            {{- with .annotations }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- with $rule.alerts.domainAutoRenewDisabled }}
+        {{- if .enabled }}
+        - alert: SynergyWholesaleDomainAutoRenewDisabled
+          expr: synergy_wholesale_domain_auto_renew_enabled == 0
+          for: {{ .for }}
+          labels:
+            {{- with $rule.defaultAlertLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .labels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: Synergy Wholesale domain auto-renew is disabled
+            description: Domain {{ "{{ $labels.domain }}" }} has auto-renew disabled.
+            {{- with .annotations }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+{{- end }}
