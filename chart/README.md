@@ -47,6 +47,8 @@ helm install synergy-wholesale-exporter yungwood/synergy-wholesale-exporter \
 | `envFrom` | Additional container `envFrom` sources | `[]` |
 | `config.address` | Exporter listen address | `:8080` |
 | `config.cacheTTL` | Synergy Wholesale API cache TTL in seconds | `3600` |
+| `config.apiErrorBackoffMin` | Minimum backoff after failed API requests in seconds | `60` |
+| `config.apiErrorBackoffMax` | Maximum backoff after failed API requests in seconds | `3600` |
 | `config.debug` | Enable debug logging | `false` |
 | `config.json` | Enable JSON logging | `false` |
 | `config.golangMetrics` | Enable Go/process metrics | `false` |

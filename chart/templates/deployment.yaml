@@ -60,6 +60,10 @@ spec:
               value: {{ .Values.config.address | quote }}
             - name: SYNERGY_WHOLESALE_EXPORTER_CACHE_TTL
               value: {{ .Values.config.cacheTTL | quote }}
+            - name: SYNERGY_WHOLESALE_EXPORTER_API_ERROR_BACKOFF_MIN
+              value: {{ .Values.config.apiErrorBackoffMin | quote }}
+            - name: SYNERGY_WHOLESALE_EXPORTER_API_ERROR_BACKOFF_MAX
+              value: {{ .Values.config.apiErrorBackoffMax | quote }}
             - name: SYNERGY_WHOLESALE_EXPORTER_DEBUG
               value: {{ .Values.config.debug | quote }}
             - name: SYNERGY_WHOLESALE_EXPORTER_JSON

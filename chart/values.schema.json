@@ -17,6 +17,12 @@
                 "address": {
                     "type": "string"
                 },
+                "apiErrorBackoffMax": {
+                    "type": "integer"
+                },
+                "apiErrorBackoffMin": {
+                    "type": "integer"
+                },
                 "cacheTTL": {
                     "type": "integer"
                 },
@@ -33,7 +39,7 @@
                     "type": "boolean"
                 }
             },
-            "required": ["address", "cacheTTL", "debug", "json", "golangMetrics", "dnssecMetrics"],
+            "required": ["address", "cacheTTL", "apiErrorBackoffMin", "apiErrorBackoffMax", "debug", "json", "golangMetrics", "dnssecMetrics"],
             "type": "object"
         },
         "fullnameOverride": {

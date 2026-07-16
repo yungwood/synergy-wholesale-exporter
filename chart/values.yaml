@@ -20,6 +20,8 @@ envFrom: []
 config:
   address: ":8080"
   cacheTTL: 3600
+  apiErrorBackoffMin: 60
+  apiErrorBackoffMax: 3600
   debug: false
   json: false
   golangMetrics: false
