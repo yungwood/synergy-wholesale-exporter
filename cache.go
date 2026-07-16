@@ -37,7 +37,9 @@ func getDomains() api.ListDomainsResponse {
 	}
 
 	listDomainsResponse = response
-	cacheExpires = time.Now().Unix() + *cacheTTLSeconds
+	now := time.Now().Unix()
+	cacheExpires = now + *cacheTTLSeconds
+	CacheLastSuccessfulRefreshTimestamp.Set(float64(now))
 	slog.Info(
 		"Updated Synergy Wholesale domain cache",
 		"domain_count", len(response.Return.DomainList),
