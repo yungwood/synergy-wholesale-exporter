@@ -57,7 +57,7 @@ helm install synergy-wholesale-exporter yungwood/synergy-wholesale-exporter \
 | `secret.apiKey` | API key used when `secret.create=true` | `""` |
 | `secret.resellerIDKey` | Secret key containing reseller ID | `reseller-id` |
 | `secret.apiKeyKey` | Secret key containing API key | `api-key` |
-| `prometheus.serviceMonitor.enabled` | Create a Prometheus Operator `ServiceMonitor` | `true` |
+| `prometheus.serviceMonitor.enabled` | Create a Prometheus Operator `ServiceMonitor` | `false` |
 | `prometheus.serviceMonitor.labels` | Extra labels for the `ServiceMonitor` | `{}` |
 | `prometheus.prometheusRule.enabled` | Create a Prometheus Operator `PrometheusRule` | `false` |
 | `prometheus.prometheusRule.labels` | Extra labels for the `PrometheusRule` | `{}` |
@@ -116,12 +116,12 @@ extraDeploy:
 
 ## Prometheus
 
-The chart creates a `ServiceMonitor` by default. Set this to `false` if you do not use the Prometheus Operator:
+Enable `ServiceMonitor` if you use the Prometheus Operator:
 
 ```yaml
 prometheus:
   serviceMonitor:
-    enabled: false
+    enabled: true
 ```
 
 The chart can also create a `PrometheusRule` with starter alerts:

@@ -38,7 +38,7 @@ secret:
 
 prometheus:
   serviceMonitor:
-    enabled: true
+    enabled: false
     labels: {}
   prometheusRule:
     enabled: false
