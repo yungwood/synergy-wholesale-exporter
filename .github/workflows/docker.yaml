@@ -4,23 +4,15 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "*"
+      - "main"
     tags:
       - "*"
-    paths-ignore:
-      - ".github/**"
-      - ".gitignore"
-      - "docker-compose.yaml"
-      - LICENSE
-      - README.md
-      - renovate.json
   pull_request:
     branches:
-      - "master"
+      - "main"
     paths-ignore:
       - ".github/**"
       - ".gitignore"
-      - "docker-compose.yaml"
       - LICENSE
       - README.md
       - renovate.json
@@ -38,7 +30,6 @@ jobs:
           dockerfile: Dockerfile
 
       - name: Determine AppVersion
-        if: github.event_name != 'pull_request'
         id: vars
         run: |
           # Get the short SHA
@@ -80,4 +71,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VERSION=${{ env.VERSION }}
+            VERSION=${{ env.VERSION || github.sha }}
+            REVISION=${{ github.sha }}

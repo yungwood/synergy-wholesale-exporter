@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:WholesaleSystem" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <SOAP-ENV:Body>
+    <ns1:listDomainsResponse xmlns:ns1="http://api.synergywholesale.com">
+      <return xsi:type="tns:bulkDomainInfoResponse">
+        <status xsi:type="xsd:string">OK</status>
+        <domainList xsi:type="SOAP-ENC:Array" SOAP-ENC:arrayType="tns:bulkDomainInfoResponseSingleEntry[2]">
+          <item xsi:type="tns:bulkDomainInfoResponseSingleEntry">
+            <status xsi:type="xsd:string">OK</status>
+            <domainName xsi:type="xsd:string">example.com</domainName>
+            <domain_status xsi:type="xsd:string">ok</domain_status>
+            <domain_expiry xsi:type="xsd:string">2025-01-02 03:04:05</domain_expiry>
+            <nameServers xsi:type="SOAP-ENC:Array" SOAP-ENC:arrayType="xsd:string[2]">
+              <item xsi:type="xsd:string">ns1.example.net</item>
+              <item xsi:type="xsd:string">ns2.example.net</item>
+            </nameServers>
+            <autoRenew xsi:type="xsd:int">1</autoRenew>
+            <DSData xsi:type="SOAP-ENC:Array" SOAP-ENC:arrayType="tns:singleDNSSECDSData[1]">
+              <item xsi:type="tns:singleDNSSECDSData">
+                <keyTag xsi:type="xsd:int">12345</keyTag>
+                <algorithm xsi:type="xsd:int">13</algorithm>
+                <digest xsi:type="xsd:string">0000000000000000000000000000000000000000000000000000000000000001</digest>
+                <digestType xsi:type="xsd:int">2</digestType>
+              </item>
+            </DSData>
+          </item>
+          <item xsi:type="tns:bulkDomainInfoResponseSingleEntry">
+            <status xsi:type="xsd:string">ERR_DOMAIN_NOT_FOUND</status>
+            <errorMessage xsi:type="xsd:string">Domain name does not exist.</errorMessage>
+            <domainName xsi:type="xsd:string">missing.example</domainName>
+          </item>
+        </domainList>
+        <page xsi:type="xsd:int">1</page>
+        <limit xsi:type="xsd:int">500</limit>
+      </return>
+    </ns1:listDomainsResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

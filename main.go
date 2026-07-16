@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -15,150 +14,24 @@ import (
 	api "github.com/yungwood/synergy-wholesale-exporter/synergywholesaleapi"
 )
 
-var version = "development"
-
 var (
-	listDomainsResponse api.ListDomainsResponse
-	cacheExpires        int64
+	version  = "development"
+	revision = "unknown"
 )
 
 var (
-	resellerID           = flag.String("reseller-id", "", "Synergy Wholesale Reseller ID")
-	apiKey               = flag.String("apikey", "", "Synergy Wholesale API Key")
-	listenAddress        = flag.String("address", ":8080", "listening port for exporter")
-	printVersion         = flag.Bool("version", false, "print version and exit")
-	debugLogging         = flag.Bool("debug", false, "enable debug logging")
-	jsonLogging          = flag.Bool("json", false, "output logs in JSON format")
-	cacheTTLSeconds      = flag.Int64("cache-ttl", 3600, "cache TTL value in seconds for Synergy Wholesale API requests")
-	disableGolangMetrics = flag.Bool("no-golang-metrics", false, "disable the default golang prometheus collectors")
+	resellerID          = flag.String("reseller-id", "", "Synergy Wholesale Reseller ID")
+	apiKey              = flag.String("apikey", "", "Synergy Wholesale API Key")
+	listenAddress       = flag.String("address", ":8080", "listening port for exporter")
+	printVersion        = flag.Bool("version", false, "print version and exit")
+	debugLogging        = flag.Bool("debug", false, "enable debug logging")
+	jsonLogging         = flag.Bool("json", false, "output logs in JSON format")
+	cacheTTLSeconds     = flag.Int64("cache-ttl", 3600, "cache TTL value in seconds for Synergy Wholesale API requests")
+	enableGolangMetrics = flag.Bool("golang-metrics", false, "enable the default golang prometheus collectors")
+	enableDNSSECMetrics = flag.Bool("dnssec-metrics", false, "enable DNSSEC key info metrics")
 )
-
-var (
-	BuildInfo = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "build_info",
-			Help: "Application build information",
-		},
-		[]string{"version", "goversion"},
-	)
-)
-
-type Collector struct {
-	domainAutoRenew     *prometheus.Desc
-	domainExpiry        *prometheus.Desc
-	domainNameServer    *prometheus.Desc
-	domainDNSSECKeyInfo *prometheus.Desc
-}
-
-func newCollector() *Collector {
-	return &Collector{
-		domainAutoRenew: prometheus.NewDesc("domain_auto_renew_enable",
-			"Domain auto-renewal status",
-			[]string{"domain"},
-			nil,
-		),
-		domainDNSSECKeyInfo: prometheus.NewDesc("domain_dnssec_key_info",
-			"Domain DNSSEC key info",
-			[]string{"domain", "key_tag", "algorithm", "digest_type", "digest"},
-			nil,
-		),
-		domainExpiry: prometheus.NewDesc("domain_expiry_timestamp_seconds",
-			"Domain expiry timestamp in seconds",
-			[]string{"domain", "status"},
-			nil,
-		),
-		domainNameServer: prometheus.NewDesc("domain_name_server_info",
-			"Domain name server info",
-			[]string{"domain", "name_server"},
-			nil,
-		),
-	}
-}
-
-func (collector *Collector) Describe(ch chan<- *prometheus.Desc) {
-	ch <- collector.domainAutoRenew
-	ch <- collector.domainExpiry
-	ch <- collector.domainNameServer
-}
-
-func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
-
-	listDomainsResp := getDomains()
-	for _, domain := range listDomainsResp.Return.DomainList {
-
-		// skip domains where api status != OK they are usually old/deleted
-		if domain.Status != "OK" {
-			continue
-		}
-
-		ch <- prometheus.MustNewConstMetric(
-			collector.domainAutoRenew,
-			prometheus.GaugeValue,
-			float64(domain.AutoRenew),
-			domain.DomainName,
-		)
-		for _, dnsSECKey := range domain.DNSSECKeys {
-			ch <- prometheus.MustNewConstMetric(
-				collector.domainDNSSECKeyInfo,
-				prometheus.GaugeValue,
-				float64(1),
-				domain.DomainName, dnsSECKey.KeyTag, dnsSECKey.Algorithm, dnsSECKey.DigestType, dnsSECKey.Digest,
-			)
-		}
-		ch <- prometheus.MustNewConstMetric(
-			collector.domainExpiry,
-			prometheus.GaugeValue,
-			float64(domain.GetDomainExpiryTimestamp()),
-			domain.DomainName, domain.DomainStatus,
-		)
-
-		for _, server := range domain.NameServers {
-			ch <- prometheus.MustNewConstMetric(
-				collector.domainNameServer,
-				prometheus.GaugeValue,
-				float64(1),
-				domain.DomainName, server,
-			)
-		}
-	}
-}
-
-func getDomains() api.ListDomainsResponse {
-	if cacheExpires > time.Now().Unix() {
-		return listDomainsResponse
-	}
-
-	slog.Info("Sending listDomains request to Synergy Wholesale API", "reseller_id", *resellerID)
-
-	request := api.ListDomainsRequest{
-		ApiKey:     *apiKey,
-		ResellerID: *resellerID,
-	}
-
-	data, err := api.SendSOAPRequest(request)
-	if err != nil {
-		fmt.Printf("Error sending SOAP request: %v\n", err)
-		return api.ListDomainsResponse{}
-	}
-
-	// Prepare the response struct
-	var response api.ListDomainsResponse
-
-	// Unmarshal the response
-	err2 := api.UnmarshalSOAPResponse(data, &response)
-	if err2 != nil {
-		fmt.Printf("Error: %v\n", err2)
-		return api.ListDomainsResponse{}
-	}
-
-	listDomainsResponse = response
-	cacheExpires = time.Now().Unix() + *cacheTTLSeconds
-
-	return response
-}
 
 func main() {
-
 	// parse command-line args
 	flag.Parse()
 
@@ -166,6 +39,10 @@ func main() {
 	if *printVersion {
 		fmt.Println("version:", version)
 		os.Exit(0)
+	}
+	if err := applyEnvConfig(); err != nil {
+		fmt.Fprintf(os.Stderr, "configuration error: %v\n", err)
+		os.Exit(1)
 	}
 
 	// setup logging options
@@ -185,17 +62,11 @@ func main() {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 	}
 	slog.SetDefault(logger)
-	if *resellerID == "" {
-		*resellerID = os.Getenv("SYNERGY_WHOLESALE_RESELLER_ID")
-	}
 
 	// check for required parameters
 	if *resellerID == "" {
 		slog.Error("Reseller ID not set!")
 		os.Exit(1)
-	}
-	if *apiKey == "" {
-		*apiKey = os.Getenv("SYNERGY_WHOLESALE_API_KEY")
 	}
 	if *apiKey == "" {
 		slog.Error("API Key not set!")
@@ -205,25 +76,49 @@ func main() {
 	// setup exporter
 	prometheusRegistry := prometheus.NewRegistry()
 	// enable default collectors
-	if !*disableGolangMetrics {
+	if *enableGolangMetrics {
 		prometheusRegistry.MustRegister(
 			collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 			collectors.NewGoCollector(),
 		)
 	}
-	// add build_info metric
-	BuildInfo.WithLabelValues(version, runtime.Version()).Set(1)
+	// add build information metric
+	BuildInfo.WithLabelValues(version, revision, runtime.Version()).Set(1)
 	collector := newCollector()
-	prometheusRegistry.MustRegister(BuildInfo, collector)
-	http.Handle("/metrics", promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{}))
+	prometheusRegistry.MustRegister(BuildInfo, HTTPRequestsTotal, api.SynergyWholesaleAPIRequestsTotal, collector)
+	http.Handle("/metrics", instrumentHTTPHandler(
+		"metrics",
+		promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{}),
+	))
 
 	// add a readiness and liveness check endpoint (return blank 200 OK response)
-	http.HandleFunc("/liveness", func(w http.ResponseWriter, r *http.Request) {})
-	http.HandleFunc("/readiness", func(w http.ResponseWriter, r *http.Request) {})
+	http.Handle("/liveness", instrumentHTTPHandler(
+		"liveness",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+	))
+	http.Handle("/readiness", instrumentHTTPHandler(
+		"readiness",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}),
+	))
 
 	// start webserver
-	slog.Info("Starting web server", "listen_address", *listenAddress)
+	slog.Info(
+		"Starting web server",
+		"listen_address", *listenAddress,
+		"cache_ttl_seconds", *cacheTTLSeconds,
+		"golang_metrics_enabled", *enableGolangMetrics,
+		"dnssec_metrics_enabled", *enableDNSSECMetrics,
+		"debug_logging", *debugLogging,
+		"json_logging", *jsonLogging,
+	)
 	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
 		slog.Error("Error starting web server", "error", err)
 	}
+}
+
+func instrumentHTTPHandler(handlerName string, handler http.Handler) http.Handler {
+	return promhttp.InstrumentHandlerCounter(
+		HTTPRequestsTotal.MustCurryWith(prometheus.Labels{"handler": handlerName}),
+		handler,
+	)
 }

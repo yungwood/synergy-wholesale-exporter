@@ -14,13 +14,16 @@ import (
 // so I opted to write an implementation using core go libraries instead. I have only included
 // the minimum required detail to work with the API
 
+var apiEndpoint = "https://api.synergywholesale.com"
+
 // Define structs for creating requests
 type apiSOAPEnvelope struct {
-	XMLName xml.Name    `xml:"Envelope"`
-	Xmlns   string      `xml:"xmlns:SOAP-ENV,attr"`
-	Xmlns1  string      `xml:"xmlns:ns1,attr"`
-	Xmlns2  string      `xml:"xmlns:ns2,attr"`
-	Body    apiSOAPBody `xml:"Body"`
+	XMLName  xml.Name    `xml:"Envelope"`
+	Xmlns    string      `xml:"xmlns:SOAP-ENV,attr"`
+	Xmlns1   string      `xml:"xmlns:ns1,attr"`
+	Xmlns2   string      `xml:"xmlns:ns2,attr"`
+	XmlnsXSI string      `xml:"xmlns:xsi,attr"`
+	Body     apiSOAPBody `xml:"Body"`
 }
 
 type apiSOAPBody struct {
@@ -29,14 +32,14 @@ type apiSOAPBody struct {
 
 // ListDomainsRequest defines your simple struct
 type ListDomainsRequest struct {
-	ApiKey     string
+	APIKey     string
 	ResellerID string
 }
 
-func (r ListDomainsRequest) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+func (r ListDomainsRequest) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
 	// Start the parent element (listDomains)
 	start.Name.Local = "ns1:listDomains"
-	if err := e.EncodeToken(start); err != nil {
+	if err := encoder.EncodeToken(start); err != nil {
 		slog.Error("Error creating SOAP request", "error", err)
 		return err
 	}
@@ -48,7 +51,7 @@ func (r ListDomainsRequest) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 			{Name: xml.Name{Local: "xsi:type"}, Value: "ns2:Map"},
 		},
 	}
-	if err := e.EncodeToken(paramStart); err != nil {
+	if err := encoder.EncodeToken(paramStart); err != nil {
 		slog.Error("Error creating SOAP request", "error", err)
 		return err
 	}
@@ -58,24 +61,24 @@ func (r ListDomainsRequest) MarshalXML(e *xml.Encoder, start xml.StartElement) e
 		Key   string `xml:"key"`
 		Value string `xml:"value"`
 	}{
-		{Key: "apiKey", Value: r.ApiKey},
+		{Key: "apiKey", Value: r.APIKey},
 		{Key: "resellerID", Value: r.ResellerID},
 	}
 
 	for _, item := range items {
-		if err := e.EncodeElement(item, xml.StartElement{Name: xml.Name{Local: "item"}}); err != nil {
+		if err := encoder.EncodeElement(item, xml.StartElement{Name: xml.Name{Local: "item"}}); err != nil {
 			return err
 		}
 	}
 
 	// End the param element
-	if err := e.EncodeToken(paramStart.End()); err != nil {
+	if err := encoder.EncodeToken(paramStart.End()); err != nil {
 		slog.Error("Error creating SOAP request", "error", err)
 		return err
 	}
 
 	// End the listDomains element
-	if err := e.EncodeToken(start.End()); err != nil {
+	if err := encoder.EncodeToken(start.End()); err != nil {
 		slog.Error("Error creating SOAP request", "error", err)
 		return err
 	}
@@ -130,6 +133,7 @@ func dateStringToTimestamp(dateString string) int64 {
 	layout := "2006-01-02 15:04:05"
 	t, err := time.ParseInLocation(layout, dateString, location)
 	if err != nil {
+		slog.Debug("Error parsing date string", "error", err, "date_string", dateString, "layout", layout)
 		return 0
 	}
 	utcTime := t.UTC()
@@ -148,22 +152,31 @@ type SOAPResponseCommon struct {
 	ErrorMessage string `xml:"errorMessage,omitempty"`
 }
 
-type SOAPResponse struct {
+type soapFault struct {
+	FaultCode   string `xml:"faultcode"`
+	FaultString string `xml:"faultstring"`
+}
+
+func (fault soapFault) Error() string {
+	if fault.FaultCode == "" {
+		return fmt.Sprintf("soap fault: %s", fault.FaultString)
+	}
+	return fmt.Sprintf("soap fault: %s: %s", fault.FaultCode, fault.FaultString)
+}
+
+type soapFaultEnvelope struct {
 	XMLName xml.Name `xml:"Envelope"`
 	Body    struct {
-		XMLName  xml.Name `xml:"Body"`
-		Response struct {
-			XMLName xml.Name `xml:"listDomainsResponse"`
-			ListDomainsResponse
-		}
-	}
+		Fault *soapFault `xml:"Fault"`
+	} `xml:"Body"`
 }
 
 func createSOAPRequest(request interface{}) ([]byte, error) {
 	envelope := apiSOAPEnvelope{
-		Xmlns:  "http://schemas.xmlsoap.org/soap/envelope/",
-		Xmlns2: "http://xml.apache.org/xml-soap",
-		Xmlns1: "http://api.synergywholesale.com",
+		Xmlns:    "http://schemas.xmlsoap.org/soap/envelope/",
+		Xmlns2:   "http://xml.apache.org/xml-soap",
+		Xmlns1:   "http://api.synergywholesale.com",
+		XmlnsXSI: "http://www.w3.org/2001/XMLSchema-instance",
 		Body: apiSOAPBody{
 			Content: request,
 		},
@@ -181,31 +194,32 @@ func createSOAPRequest(request interface{}) ([]byte, error) {
 	return xmlRequest, nil
 }
 
-func Send(request ListDomainsRequest) (interface{}, error) {
-
-	response, err := SendSOAPRequest(request)
+func Send(request ListDomainsRequest) (ListDomainsResponse, error) {
+	response, err := sendSOAPRequest(request)
 	if err != nil {
-		return nil, err
+		return ListDomainsResponse{}, err
 	}
 
 	// Unmarshal the response
 	var responseObject ListDomainsResponse
-	err2 := UnmarshalSOAPResponse(response, &responseObject)
+	err2 := unmarshalSOAPResponse(response, &responseObject)
 	if err2 != nil {
-		return nil, err2
+		return ListDomainsResponse{}, err2
 	}
 	return responseObject, nil
 }
 
-func SendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
-	client := &http.Client{}
+func sendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 
 	soapRequest, err := createSOAPRequest(param)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", "https://api.synergywholesale.com", bytes.NewBuffer(soapRequest))
+	req, err := http.NewRequest(http.MethodPost, apiEndpoint, bytes.NewBuffer(soapRequest))
 	if err != nil {
 		return nil, err
 	}
@@ -214,22 +228,42 @@ func SendSOAPRequest(param ListDomainsRequest) ([]byte, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
+		SynergyWholesaleAPIRequestsTotal.WithLabelValues("0", "error").Inc()
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Debug("Error closing Synergy Wholesale API response body", "error", err)
+		}
+	}()
 
 	// Log the response status code
 	slog.Debug("Request successful", "response_code", resp.StatusCode)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		SynergyWholesaleAPIRequestsTotal.WithLabelValues(fmt.Sprintf("%d", resp.StatusCode), "error").Inc()
 		return nil, err
 	}
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		SynergyWholesaleAPIRequestsTotal.WithLabelValues(fmt.Sprintf("%d", resp.StatusCode), "error").Inc()
+		slog.Debug("Synergy Wholesale API returned non-2xx status", "response_code", resp.StatusCode)
+		return nil, fmt.Errorf("synergy wholesale api returned status %d: %s", resp.StatusCode, truncateBody(body, 1024))
+	}
 
+	SynergyWholesaleAPIRequestsTotal.WithLabelValues(fmt.Sprintf("%d", resp.StatusCode), "success").Inc()
 	return body, nil
 }
 
-func UnmarshalSOAPResponse(data []byte, response interface{}) error {
+func unmarshalSOAPResponse(data []byte, response interface{}) error {
+	var faultEnvelope soapFaultEnvelope
+	if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&faultEnvelope); err != nil {
+		return fmt.Errorf("failed to unmarshal SOAP response: %w", err)
+	}
+	if faultEnvelope.Body.Fault != nil {
+		return *faultEnvelope.Body.Fault
+	}
+
 	envelope := apiSOAPEnvelope{
 		Body: apiSOAPBody{
 			Content: response,
@@ -242,4 +276,11 @@ func UnmarshalSOAPResponse(data []byte, response interface{}) error {
 		return fmt.Errorf("failed to unmarshal SOAP response: %w", err)
 	}
 	return nil
+}
+
+func truncateBody(body []byte, limit int) string {
+	if len(body) <= limit {
+		return string(body)
+	}
+	return string(body[:limit]) + "...[truncated]"
 }

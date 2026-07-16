@@ -1,0 +1,19 @@
+---
+version: "2"
+
+linters:
+  enable:
+    #    - gosec
+    - maintidx
+    - nestif
+    - promlinter
+    - sloglint
+    - unconvert
+    - usestdlibvars
+    - varnamelen
+    - wastedassign
+    - whitespace
+
+formatters:
+  enable:
+    - gofmt

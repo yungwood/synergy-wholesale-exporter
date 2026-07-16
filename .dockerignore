@@ -1,0 +1,10 @@
+.git
+.github
+.gitlab-ci.yml
+.golangci.yml
+.dockerignore
+.gitignore
+charts
+README.md
+renovate.json
+synergy-wholesale-exporter
